@@ -1,0 +1,25 @@
+{
+  "name": "file-converter-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for document conversion built on Cloudflare Workers",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev --remote",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "cf-typegen": "wrangler types"
+  },
+  "keywords": ["mcp", "cloudflare", "workers", "document-conversion", "pdf"],
+  "author": "Jeremy Dawes <jeremy@jezweb.net>",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "wrangler": "^3.94.0",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "hono": "^4.6.14",
+    "@cloudflare/puppeteer": "^0.0.12",
+    "zod": "^3.24.1"
+  }
+}

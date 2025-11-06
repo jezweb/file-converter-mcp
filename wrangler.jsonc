@@ -1,0 +1,27 @@
+{
+  "name": "file-converter-mcp",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "account_id": "0460574641fdbb98159c98ebf593e2bd",
+
+  "browser": {
+    "binding": "BROWSER"
+  },
+
+  "ai": {
+    "binding": "AI"
+  },
+
+  "r2_buckets": [
+    {
+      "binding": "R2_BUCKET",
+      "bucket_name": "converted-files",
+      "preview_bucket_name": "converted-files-dev"
+    }
+  ],
+
+  "observability": {
+    "enabled": true
+  }
+}
