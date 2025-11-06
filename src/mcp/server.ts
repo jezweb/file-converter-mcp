@@ -7,6 +7,7 @@ import {
   createInternalError,
   createJsonResult,
 } from '../utils/responses';
+import { htmlToPdf, urlToPdf, markdownToPdf } from '../handlers/browser-pdf';
 
 export async function handleMCPRequest(
   request: MCPRequest,
@@ -59,12 +60,44 @@ export async function handleMCPRequest(
           return createMethodNotFound(id);
         }
 
-        // Tool handlers will be added in later phases
-        // For now, return not implemented
-        return createInternalError(
-          id,
-          `Tool "${toolName}" not yet implemented`
-        );
+        // Dispatch to tool handlers
+        try {
+          let result: any;
+
+          switch (toolName) {
+            // Phase 2: Browser Rendering PDFs
+            case 'html_to_pdf':
+              result = await htmlToPdf(args, env);
+              break;
+
+            case 'url_to_pdf':
+              result = await urlToPdf(args, env);
+              break;
+
+            case 'markdown_to_pdf':
+              result = await markdownToPdf(args, env);
+              break;
+
+            // Future phases will add more tools here
+            default:
+              return createInternalError(
+                id,
+                `Tool "${toolName}" not yet implemented`
+              );
+          }
+
+          return createMCPResponse(id, {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result),
+              },
+            ],
+          });
+        } catch (error: any) {
+          console.error(`Tool execution error (${toolName}):`, error);
+          return createInternalError(id, error.message);
+        }
       }
 
       default:
