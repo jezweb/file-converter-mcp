@@ -2,6 +2,8 @@
 
 **Model Context Protocol (MCP) server for document conversion and content extraction, built on Cloudflare Workers.**
 
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/jezweb/file-converter-mcp)
+
 Leverage Cloudflare Browser Rendering, Workers AI, and PDF.co to convert documents, generate PDFs from HTML, capture screenshots, and extract structured data.
 
 ---
