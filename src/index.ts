@@ -120,7 +120,168 @@ app.get('/', (c) => {
       font-weight: 500;
       margin-right: 0.5rem;
     }
+    .connection-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+    .connection-card {
+      background: #ffffff;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .connection-card:hover {
+      border-color: #667eea;
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+      transform: translateY(-2px);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .client-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+    .client-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #2d3748;
+      margin: 0;
+    }
+    .client-desc {
+      font-size: 0.85rem;
+      color: #718096;
+      margin: 0.25rem 0 0 0;
+    }
+    .connection-code {
+      background: #1a202c;
+      color: #68d391;
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      margin: 1rem 0;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .copy-btn {
+      width: 100%;
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+    .copy-btn:hover {
+      background: #5568d3;
+      transform: translateY(-1px);
+    }
+    .copy-btn:active {
+      transform: translateY(0);
+    }
+    .copy-btn.copied {
+      background: #10b981;
+    }
+    .copy-btn.copied svg {
+      display: none;
+    }
   </style>
+  <script>
+    const configs = {
+      'better-chatbot': \`{
+  "url": "${deployUrl}/mcp",
+  "headers": {
+    "Authorization": "Bearer YOUR_TOKEN"
+  }
+}\`,
+      'claude-desktop': \`{
+  "file-converter": {
+    "url": "${deployUrl}/mcp",
+    "transport": "http",
+    "headers": {
+      "Authorization": "Bearer YOUR_TOKEN"
+    }
+  }
+}\`,
+      'fastmcp': \`from fastmcp import Client
+
+client = Client("${deployUrl}/mcp",
+  headers={
+    "Authorization": "Bearer YOUR_TOKEN"
+  }
+)\`,
+      'openai': \`const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+const response = await client.responses.create({
+  tools: [{
+    type: "custom_mcp",
+    mcp: {
+      url: "${deployUrl}/mcp",
+      headers: {
+        Authorization: "Bearer YOUR_TOKEN"
+      }
+    }
+  }]
+});\`,
+      'curl': \`curl -X POST ${deployUrl}/mcp \\\\
+  -H "Authorization: Bearer YOUR_TOKEN" \\\\
+  -H "Content-Type: application/json" \\\\
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/list"
+  }'\`,
+      'generic': \`{
+  "name": "File Converter",
+  "url": "${deployUrl}/mcp",
+  "transport": "http",
+  "headers": {
+    "Authorization": "Bearer YOUR_TOKEN"
+  }
+}\`
+    };
+
+    function copyConfig(client) {
+      const text = configs[client];
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target.closest('.copy-btn');
+        const originalText = btn.textContent;
+        btn.classList.add('copied');
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = originalText;
+        }, 2000);
+      });
+    }
+  </script>
 </head>
 <body>
   <div class="container">
@@ -128,16 +289,171 @@ app.get('/', (c) => {
     <p class="subtitle">Document conversion & processing for AI agents</p>
 
     <div class="section">
-      <h2>🚀 MCP Configuration</h2>
-      <p style="margin-bottom: 1rem;">Add this server to your MCP client:</p>
-      <div class="code-block">{
+      <h2>🚀 Connect to MCP Clients</h2>
+      <p style="margin-bottom: 1.5rem; color: #4a5568;">Choose your preferred client to get started:</p>
+
+      <div class="connection-grid">
+        <!-- Better Chatbot -->
+        <div class="connection-card">
+          <div class="card-header">
+            <div class="client-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">BC</div>
+            <div>
+              <h3 class="client-name">Better Chatbot</h3>
+              <p class="client-desc">HTTP transport config</p>
+            </div>
+          </div>
+          <pre class="connection-code">{
+  "url": "${deployUrl}/mcp",
+  "headers": {
+    "Authorization": "Bearer YOUR_TOKEN"
+  }
+}</pre>
+          <button class="copy-btn" onclick="copyConfig('better-chatbot')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copy Config
+          </button>
+        </div>
+
+        <!-- Claude Desktop -->
+        <div class="connection-card">
+          <div class="card-header">
+            <div class="client-icon" style="background: #D97757;">C</div>
+            <div>
+              <h3 class="client-name">Claude Desktop</h3>
+              <p class="client-desc">Add to MCP settings</p>
+            </div>
+          </div>
+          <pre class="connection-code">{
+  "file-converter": {
+    "url": "${deployUrl}/mcp",
+    "transport": "http",
+    "headers": {
+      "Authorization": "Bearer YOUR_TOKEN"
+    }
+  }
+}</pre>
+          <button class="copy-btn" onclick="copyConfig('claude-desktop')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copy Config
+          </button>
+        </div>
+
+        <!-- FastMCP Client -->
+        <div class="connection-card">
+          <div class="card-header">
+            <div class="client-icon" style="background: #10b981;">F</div>
+            <div>
+              <h3 class="client-name">FastMCP Client</h3>
+              <p class="client-desc">Python SDK integration</p>
+            </div>
+          </div>
+          <pre class="connection-code">from fastmcp import Client
+
+client = Client("${deployUrl}/mcp",
+  headers={
+    "Authorization": "Bearer YOUR_TOKEN"
+  }
+)</pre>
+          <button class="copy-btn" onclick="copyConfig('fastmcp')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copy Code
+          </button>
+        </div>
+
+        <!-- OpenAI SDK -->
+        <div class="connection-card">
+          <div class="card-header">
+            <div class="client-icon" style="background: #000000;">AI</div>
+            <div>
+              <h3 class="client-name">OpenAI Responses API</h3>
+              <p class="client-desc">Access via responses.create()</p>
+            </div>
+          </div>
+          <pre class="connection-code">const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+const response = await client.responses.create({
+  tools: [{
+    type: "custom_mcp",
+    mcp: {
+      url: "${deployUrl}/mcp",
+      headers: {
+        Authorization: "Bearer YOUR_TOKEN"
+      }
+    }
+  }]
+});</pre>
+          <button class="copy-btn" onclick="copyConfig('openai')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copy Code
+          </button>
+        </div>
+
+        <!-- cURL -->
+        <div class="connection-card">
+          <div class="card-header">
+            <div class="client-icon" style="background: #3b82f6;">⚡</div>
+            <div>
+              <h3 class="client-name">cURL / HTTP</h3>
+              <p class="client-desc">Direct API testing</p>
+            </div>
+          </div>
+          <pre class="connection-code">curl -X POST ${deployUrl}/mcp \\
+  -H "Authorization: Bearer YOUR_TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/list"
+  }'</pre>
+          <button class="copy-btn" onclick="copyConfig('curl')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copy Command
+          </button>
+        </div>
+
+        <!-- Generic HTTP -->
+        <div class="connection-card">
+          <div class="card-header">
+            <div class="client-icon" style="background: #8b5cf6;">🔗</div>
+            <div>
+              <h3 class="client-name">Generic HTTP Client</h3>
+              <p class="client-desc">For any MCP-compatible client</p>
+            </div>
+          </div>
+          <pre class="connection-code">{
   "name": "File Converter",
   "url": "${deployUrl}/mcp",
   "transport": "http",
   "headers": {
     "Authorization": "Bearer YOUR_TOKEN"
   }
-}</div>
+}</pre>
+          <button class="copy-btn" onclick="copyConfig('generic')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copy Config
+          </button>
+        </div>
+      </div>
     </div>
 
     <div class="section">
@@ -224,20 +540,7 @@ app.get('/', (c) => {
     </div>
 
     <div class="warning">
-      <strong>⚠️ Authentication Required:</strong> The /mcp endpoint requires a Bearer token.
-      Set AUTH_TOKEN in your environment or .dev.vars file.
-    </div>
-
-    <div class="section">
-      <h2>📝 Example Request</h2>
-      <div class="code-block">curl -X POST ${deployUrl}/mcp \\
-  -H "Authorization: Bearer YOUR_TOKEN" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 1,
-    "method": "tools/list"
-  }'</div>
+      <strong>⚠️ Authentication Required:</strong> The /mcp endpoint requires a Bearer token. Replace <code>YOUR_TOKEN</code> in the configs above with your actual token.
     </div>
 
     <div class="section" style="text-align: center; color: #718096; padding-top: 2rem; border-top: 1px solid #e2e8f0;">
