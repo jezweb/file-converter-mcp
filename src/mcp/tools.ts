@@ -191,8 +191,25 @@ export const tools: MCPTool[] = [
     },
   },
 
-  // Phase 5: PDF.co Data Extraction
-  // - excel_to_json
+  // Phase 5: PDF.co Data Extraction (1 tool)
+  {
+    name: 'excel_to_json',
+    description: 'Parse Excel spreadsheets (xls, xlsx, csv) to structured JSON using PDF.co API. Supports multi-sheet workbooks via worksheetIndex parameter. Extracts calculated cell values (formulas are computed, not extracted as text). Returns both JSON data and permanent R2 storage URL. Ideal for data extraction, analysis, and processing.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        fileUrl: {
+          type: 'string',
+          description: 'Publicly accessible URL to Excel file. Supported formats: .xls, .xlsx, .csv. File must be downloadable without authentication.',
+        },
+        worksheetIndex: {
+          type: 'string',
+          description: 'Optional 1-based worksheet index (default: "1" for first sheet). Use "2" for second sheet, "3" for third, etc. Only one worksheet is converted per call.',
+        },
+      },
+      required: ['fileUrl'],
+    },
+  },
 
   // Phase 6: PDF.co Office Conversions
   // - office_to_pdf

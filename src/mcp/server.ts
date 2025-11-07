@@ -10,6 +10,7 @@ import {
 import { htmlToPdf, urlToPdf, markdownToPdf } from '../handlers/browser-pdf';
 import { htmlToScreenshot, urlToScreenshot } from '../handlers/browser-screenshot';
 import { documentToMarkdown } from '../handlers/ai-markdown';
+import { excelToJson } from '../handlers/pdfco-excel';
 
 export async function handleMCPRequest(
   request: MCPRequest,
@@ -92,6 +93,11 @@ export async function handleMCPRequest(
             // Phase 4: Workers AI Markdown
             case 'document_to_markdown':
               result = await documentToMarkdown(args, env);
+              break;
+
+            // Phase 5: PDF.co Data Extraction
+            case 'excel_to_json':
+              result = await excelToJson(args, env);
               break;
 
             // Future phases will add more tools here

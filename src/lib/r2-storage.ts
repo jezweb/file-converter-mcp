@@ -114,6 +114,38 @@ export async function uploadImageToR2(
 }
 
 /**
+ * Generic upload function for any file type to R2 storage
+ * @param bucket - R2 bucket binding
+ * @param key - Full key/path in bucket (e.g., "excel-to-json/file.json")
+ * @param buffer - File buffer to upload
+ * @param contentType - MIME type (e.g., "application/json")
+ * @param isDev - Whether using dev bucket (default: false)
+ * @returns Public URL to uploaded file
+ */
+export async function uploadToR2(
+  bucket: R2Bucket,
+  key: string,
+  buffer: ArrayBuffer | Buffer | Uint8Array,
+  contentType: string,
+  isDev: boolean = false
+): Promise<string> {
+  // Upload to R2
+  await bucket.put(key, buffer, {
+    httpMetadata: {
+      contentType,
+    },
+    customMetadata: {
+      uploadedAt: new Date().toISOString(),
+      ...(ENABLE_TTL && { expiresAt: getExpirationDate().toISOString() }),
+    },
+  });
+
+  // Generate public URL (use correct bucket URL)
+  const baseUrl = getR2PublicUrl(isDev);
+  return `${baseUrl}/${key}`;
+}
+
+/**
  * Calculate expiration date based on TTL_DAYS
  */
 function getExpirationDate(): Date {

@@ -1,7 +1,7 @@
 # Session State
 
-**Current Phase**: Phase 4 (Complete)
-**Current Stage**: Ready for Phase 5
+**Current Phase**: Phase 5 (Complete)
+**Current Stage**: Ready for Phase 6
 **Last Update**: 2025-01-15
 **Planning Docs**: `docs/IMPLEMENTATION_PHASES.md`, `docs/ARCHITECTURE.md`, `CLAUDE.md`
 
@@ -198,13 +198,53 @@
 - Image output provides detailed visual description ideal for RAG applications
 - Format detection from file extension with fallback to Content-Type header
 
-**Next Action**: Phase 5 - Implement PDF.co Client & Excel (excel_to_json tool)
+**Next Action**: Phase 6 - Implement PDF.co Office Conversions (office_to_pdf tool)
 
 ---
 
-## Phase 5: PDF.co Client & Excel ⏸️
-**Type**: Integration | **Est**: 2h
-**Spec**: `docs/IMPLEMENTATION_PHASES.md#phase-5`
+## Phase 5: PDF.co Client & Excel ✅
+**Type**: Integration | **Completed**: 2025-01-15 | **Checkpoint**: TBD
+**Summary**: Implemented excel_to_json tool using PDF.co API with multi-sheet support and BOM handling
+
+**Completed**:
+- [x] Researched PDF.co Excel conversion API endpoints
+- [x] Created src/lib/pdfco-client.ts - Base API client with error handling
+- [x] Created src/handlers/pdfco-excel.ts - Excel to JSON handler
+- [x] Registered excel_to_json tool in src/mcp/tools.ts with complete schema
+- [x] Wired handler in src/mcp/server.ts dispatcher
+- [x] Updated health endpoint (tools: 7, totalPlanned: 13)
+- [x] Tested with PDF.co test Excel file
+- [x] Fixed BOM (Byte Order Mark) parsing issue
+
+**Key Files Created**:
+- `src/lib/pdfco-client.ts` - PDF.co API wrapper (convertExcelToJson, error codes, rate limits)
+- `src/handlers/pdfco-excel.ts` - excelToJson handler with BOM stripping
+- `src/lib/r2-storage.ts` - Added generic uploadToR2 function
+
+**Key Files Updated**:
+- `src/mcp/tools.ts` - Added excel_to_json tool definition (now 7/13 tools)
+- `src/mcp/server.ts` - Added import and case statement for excel_to_json
+- `src/index.ts` - Updated health endpoint (tools: 7)
+
+**Verification Results**:
+- ✅ `excel_to_json` - Converts Excel (.xls, .xlsx, .csv) to JSON
+- ✅ Multi-sheet support via worksheetIndex parameter (1-based)
+- ✅ Extracts calculated cell values (formulas are computed)
+- ✅ Returns both JSON data inline and R2 storage URL
+- ✅ BOM stripping for PDF.co UTF-8 encoded responses
+- ✅ Remaining credits tracking (7352 credits remaining)
+- ✅ Comprehensive error handling (402, 403, 429, 442, 445 status codes)
+
+**Notes**:
+- PDF.co API uses `x-api-key` header (NOT Bearer token)
+- Supported formats: .xls, .xlsx, .csv
+- One worksheet per call (use worksheetIndex for multi-sheet workbooks)
+- Formulas extracted as calculated values only
+- PDF.co output expires in 60 minutes (downloaded and re-uploaded to R2)
+- Rate limit: 2 req/sec (free), 5 req/sec (paid), 25 req/sec (subscription)
+- BOM character (0xFEFF) stripped from JSON response text
+
+**Next Action**: Phase 6 - Implement PDF.co Office Conversions (office_to_pdf tool)
 
 ---
 
