@@ -1,0 +1,7 @@
+# PDF.co API Key
+# Get yours at: https://pdf.co/
+PDFCO_API_KEY=your_pdfco_api_key_here
+
+# Bearer token for MCP authentication
+# Generate with: openssl rand -base64 32
+AUTH_TOKEN=your_bearer_token_here

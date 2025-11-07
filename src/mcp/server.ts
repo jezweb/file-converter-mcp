@@ -26,31 +26,19 @@ export async function handleMCPRequest(
     switch (method) {
       case 'initialize':
         return createMCPResponse(id, {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify({
-                protocolVersion: '2024-11-05',
-                serverInfo: {
-                  name: 'file-converter-mcp',
-                  version: '1.0.0',
-                },
-                capabilities: {
-                  tools: {},
-                },
-              }),
-            },
-          ],
+          protocolVersion: '2024-11-05',
+          serverInfo: {
+            name: 'file-converter-mcp',
+            version: '1.0.0',
+          },
+          capabilities: {
+            tools: {},
+          },
         });
 
       case 'tools/list':
         return createMCPResponse(id, {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify({ tools }),
-            },
-          ],
+          tools: tools,
         });
 
       case 'tools/call': {

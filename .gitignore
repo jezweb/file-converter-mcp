@@ -1,0 +1,44 @@
+# Secrets & Environment
+.dev.vars
+.env
+.env.*
+*.pem
+*.key
+
+# Development files (should not be in repo)
+SESSION.md
+
+# Cloudflare
+.wrangler/
+wrangler.toml.backup
+worker/
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.esbuild/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary
+tmp/
+temp/

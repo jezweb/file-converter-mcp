@@ -565,7 +565,7 @@ const response = await client.responses.create({
   return c.html(html);
 });
 
-// MCP endpoint (protected with bearer auth)
+// MCP endpoint (protected with bearer auth) - POST only for JSON-RPC requests
 app.post('/mcp', async (c) => {
   // Manual bearer token check
   const authHeader = c.req.header('Authorization');
