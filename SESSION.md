@@ -1,7 +1,7 @@
 # Session State
 
-**Current Phase**: Phase 3 (Complete)
-**Current Stage**: Ready for Phase 4
+**Current Phase**: Phase 4 (Complete)
+**Current Stage**: Ready for Phase 5
 **Last Update**: 2025-01-15
 **Planning Docs**: `docs/IMPLEMENTATION_PHASES.md`, `docs/ARCHITECTURE.md`, `CLAUDE.md`
 
@@ -159,9 +159,46 @@
 
 ---
 
-## Phase 4: Workers AI Markdown ⏸️
-**Type**: Implementation | **Est**: 1.5h
-**Spec**: `docs/IMPLEMENTATION_PHASES.md#phase-4`
+## Phase 4: Workers AI Markdown ✅
+**Type**: Implementation | **Completed**: 2025-01-15 | **Checkpoint**: (pending)
+**Summary**: Implemented document_to_markdown tool using Workers AI toMarkdown() API
+
+**Completed**:
+- [x] Researched Workers AI toMarkdown API and discovery endpoint
+- [x] Created src/lib/ai-client.ts - Workers AI wrapper functions
+- [x] Created src/handlers/ai-markdown.ts - documentToMarkdown handler
+- [x] Registered document_to_markdown tool in src/mcp/tools.ts with complete schema
+- [x] Wired handler in src/mcp/server.ts dispatcher
+- [x] Updated health endpoint (tools: 6, totalPlanned: 13)
+- [x] Tested with PDF document and image via MCP endpoint
+- [x] Verified markdown output quality and format
+
+**Key Files Created**:
+- `src/lib/ai-client.ts` - Workers AI toMarkdown wrapper (convertToMarkdown, getSupportedFormats, etc.)
+- `src/handlers/ai-markdown.ts` - documentToMarkdown handler
+
+**Key Files Updated**:
+- `src/mcp/tools.ts` - Added document_to_markdown tool definition (now 6/13 tools)
+- `src/mcp/server.ts` - Added import and case statement for document_to_markdown
+- `src/index.ts` - Updated health endpoint (tools: 6)
+
+**Verification Results**:
+- ✅ `document_to_markdown` - Converts PDF to markdown with metadata and content structure
+- ✅ Image conversion works with AI vision models (object detection + summarization)
+- ✅ Returns structured markdown, mimeType, token count, and fileName
+- ✅ Supported formats: .pdf, .docx, .xlsx, .xls, .xlsm, .xlsb, .ods, .odt, .csv, .html, .xml, .jpeg, .jpg, .png, .webp, .svg, .numbers
+- ✅ Discovery endpoint integration for future-proof format support
+- ✅ Comprehensive error handling (invalid URL, unsupported format, quota exceeded)
+
+**Notes**:
+- Uses Workers AI toMarkdown() API (free for most formats, uses AI models for images)
+- Discovery endpoint `getSupportedFormats()` makes tool future-proof as Cloudflare adds formats
+- Image conversion uses 2 AI models (object detection + summarization) and counts toward quota
+- PDF output includes metadata section and structured page-by-page content
+- Image output provides detailed visual description ideal for RAG applications
+- Format detection from file extension with fallback to Content-Type header
+
+**Next Action**: Phase 5 - Implement PDF.co Client & Excel (excel_to_json tool)
 
 ---
 

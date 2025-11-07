@@ -171,8 +171,25 @@ export const tools: MCPTool[] = [
     },
   },
 
-  // Phase 4: Workers AI Markdown
-  // - document_to_markdown
+  // Phase 4: Workers AI Markdown (1 tool)
+  {
+    name: 'document_to_markdown',
+    description: 'Convert documents (PDF, DOCX, XLSX, images) to RAG-ready markdown using Workers AI. Supports all major document formats and uses AI vision models for images (object detection + summarization). Returns structured markdown text ideal for RAG applications, embeddings, and text analysis.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        fileUrl: {
+          type: 'string',
+          description: 'Publicly accessible URL to document file. Supported formats: .pdf, .docx, .xlsx, .xls, .xlsm, .xlsb, .ods, .odt, .csv, .html, .xml, .jpeg, .jpg, .png, .webp, .svg, .numbers',
+        },
+        fileName: {
+          type: 'string',
+          description: 'Optional file name with extension. If not provided, will be extracted from URL. Used to determine file type.',
+        },
+      },
+      required: ['fileUrl'],
+    },
+  },
 
   // Phase 5: PDF.co Data Extraction
   // - excel_to_json

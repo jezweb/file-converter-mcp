@@ -9,6 +9,7 @@ import {
 } from '../utils/responses';
 import { htmlToPdf, urlToPdf, markdownToPdf } from '../handlers/browser-pdf';
 import { htmlToScreenshot, urlToScreenshot } from '../handlers/browser-screenshot';
+import { documentToMarkdown } from '../handlers/ai-markdown';
 
 export async function handleMCPRequest(
   request: MCPRequest,
@@ -86,6 +87,11 @@ export async function handleMCPRequest(
 
             case 'url_to_screenshot':
               result = await urlToScreenshot(args, env);
+              break;
+
+            // Phase 4: Workers AI Markdown
+            case 'document_to_markdown':
+              result = await documentToMarkdown(args, env);
               break;
 
             // Future phases will add more tools here
