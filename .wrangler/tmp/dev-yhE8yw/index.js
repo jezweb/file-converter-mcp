@@ -55,7 +55,7 @@ var __privateSet = (obj, member, value, setter) => {
   return value;
 };
 
-// .wrangler/tmp/bundle-UcTsMa/checked-fetch.js
+// .wrangler/tmp/bundle-8icYKa/checked-fetch.js
 function checkURL(request, init) {
   const url = request instanceof URL ? request : new URL(
     (typeof request === "string" ? new Request(request, init) : request).url
@@ -73,7 +73,7 @@ function checkURL(request, init) {
 }
 var urls;
 var init_checked_fetch = __esm({
-  ".wrangler/tmp/bundle-UcTsMa/checked-fetch.js"() {
+  ".wrangler/tmp/bundle-8icYKa/checked-fetch.js"() {
     "use strict";
     urls = /* @__PURE__ */ new Set();
     __name(checkURL, "checkURL");
@@ -710,11 +710,11 @@ var init_BrowserWebSocketTransport = __esm({
   }
 });
 
-// .wrangler/tmp/bundle-UcTsMa/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-8icYKa/middleware-loader.entry.ts
 init_checked_fetch();
 init_modules_watch_stub();
 
-// .wrangler/tmp/bundle-UcTsMa/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-8icYKa/middleware-insertion-facade.js
 init_checked_fetch();
 init_modules_watch_stub();
 
@@ -2498,10 +2498,70 @@ var tools = [
       },
       required: ["markdown"]
     }
+  },
+  // Phase 3: Browser Rendering Screenshots (2 tools)
+  {
+    name: "html_to_screenshot",
+    description: "Convert HTML/CSS to screenshot image (PNG, JPEG, or WebP) using Cloudflare Browser Rendering. Captures full page or custom viewport. Returns publicly accessible URL to generated image. Ideal for visual previews, thumbnails, or capturing dynamically generated content.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        html: {
+          type: "string",
+          description: "HTML content to capture (must be valid HTML). Can include inline CSS styles or <style> tags."
+        },
+        format: {
+          type: "string",
+          enum: ["png", "jpeg", "webp"],
+          description: "Image format. Default: png. PNG supports transparency, JPEG is smaller, WebP is most efficient."
+        },
+        fullPage: {
+          type: "boolean",
+          description: "Capture full page height (true) or single viewport (false). Default: true."
+        },
+        viewport: {
+          type: "object",
+          properties: {
+            width: { type: "number", description: "Viewport width in pixels. Default: 1280" },
+            height: { type: "number", description: "Viewport height in pixels. Default: 720" }
+          },
+          description: "Custom viewport size for screenshot. Uses 2x device scale for sharp images."
+        }
+      },
+      required: ["html"]
+    }
+  },
+  {
+    name: "url_to_screenshot",
+    description: "Capture screenshot of any publicly accessible webpage by URL using Cloudflare Browser Rendering. Waits for page load and network idle. Supports full page capture or custom viewport. Returns publicly accessible URL to generated image.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        url: {
+          type: "string",
+          description: "URL of webpage to capture (must be publicly accessible via HTTP/HTTPS). Example: https://example.com"
+        },
+        format: {
+          type: "string",
+          enum: ["png", "jpeg", "webp"],
+          description: "Image format. Default: png."
+        },
+        fullPage: {
+          type: "boolean",
+          description: "Capture full page height (true) or single viewport (false). Default: true."
+        },
+        viewport: {
+          type: "object",
+          properties: {
+            width: { type: "number", description: "Viewport width in pixels. Default: 1280" },
+            height: { type: "number", description: "Viewport height in pixels. Default: 720" }
+          },
+          description: "Custom viewport size for screenshot."
+        }
+      },
+      required: ["url"]
+    }
   }
-  // Phase 3: Browser Rendering Screenshots
-  // - html_to_screenshot
-  // - url_to_screenshot
   // Phase 4: Workers AI Markdown
   // - document_to_markdown
   // Phase 5: PDF.co Data Extraction
@@ -19751,6 +19811,40 @@ async function generatePdfFromUrl(browser, url, options = {}) {
   }
 }
 __name(generatePdfFromUrl, "generatePdfFromUrl");
+async function generateScreenshotFromHtml(browser, html, format = "png", fullPage = true) {
+  const page = await browser.newPage();
+  try {
+    await page.setContent(html, { waitUntil: "networkidle2" });
+    const screenshotBuffer = await page.screenshot({
+      type: format,
+      fullPage,
+      omitBackground: format === "png"
+      // Transparent background for PNG
+    });
+    return screenshotBuffer;
+  } finally {
+    await page.close();
+  }
+}
+__name(generateScreenshotFromHtml, "generateScreenshotFromHtml");
+async function generateScreenshotFromUrl(browser, url, format = "png", fullPage = true) {
+  const page = await browser.newPage();
+  try {
+    await page.goto(url, {
+      waitUntil: "networkidle2",
+      timeout: 3e4
+    });
+    const screenshotBuffer = await page.screenshot({
+      type: format,
+      fullPage,
+      omitBackground: format === "png"
+    });
+    return screenshotBuffer;
+  } finally {
+    await page.close();
+  }
+}
+__name(generateScreenshotFromUrl, "generateScreenshotFromUrl");
 
 // src/lib/r2-storage.ts
 init_checked_fetch();
@@ -19786,6 +19880,32 @@ async function uploadPdfToR2(bucket, buffer, prefix = "converted", isDev = false
   };
 }
 __name(uploadPdfToR2, "uploadPdfToR2");
+async function uploadImageToR2(bucket, buffer, format, prefix = "converted", isDev = false) {
+  const filename = `${Date.now()}-${crypto.randomUUID()}.${format}`;
+  const key = `${prefix}/${filename}`;
+  const contentTypeMap = {
+    png: "image/png",
+    jpg: "image/jpeg",
+    webp: "image/webp"
+  };
+  await bucket.put(key, buffer, {
+    httpMetadata: {
+      contentType: contentTypeMap[format]
+    },
+    customMetadata: {
+      uploadedAt: (/* @__PURE__ */ new Date()).toISOString(),
+      ...ENABLE_TTL && { expiresAt: getExpirationDate().toISOString() }
+    }
+  });
+  const baseUrl = getR2PublicUrl(isDev);
+  const publicUrl = `${baseUrl}/${key}`;
+  return {
+    key,
+    publicUrl,
+    ...ENABLE_TTL && { expiresAt: getExpirationDate() }
+  };
+}
+__name(uploadImageToR2, "uploadImageToR2");
 function getExpirationDate() {
   const expiry = /* @__PURE__ */ new Date();
   expiry.setDate(expiry.getDate() + TTL_DAYS);
@@ -20041,6 +20161,77 @@ ${contentHtml}
 }
 __name(markdownToPdf, "markdownToPdf");
 
+// src/handlers/browser-screenshot.ts
+init_checked_fetch();
+init_modules_watch_stub();
+async function htmlToScreenshot(args, env) {
+  const { html, format = "png", fullPage = true, viewport } = args;
+  if (!html || html.trim().length === 0) {
+    throw new Error("HTML content cannot be empty");
+  }
+  const browser = await launchBrowser(env.BROWSER);
+  try {
+    if (viewport) {
+      const page = await browser.newPage();
+      await page.setViewport({
+        width: viewport.width || 1280,
+        height: viewport.height || 720,
+        deviceScaleFactor: 2
+        // High DPI for sharp images
+      });
+      await page.close();
+    }
+    const imageBuffer = await generateScreenshotFromHtml(browser, html, format, fullPage);
+    const isDev = true;
+    const { publicUrl } = await uploadImageToR2(env.R2_BUCKET, imageBuffer, format, "converted/html-screenshot", isDev);
+    return { imageUrl: publicUrl };
+  } catch (error) {
+    if (error.message.includes("timeout")) {
+      throw new Error("Screenshot generation timed out. Try simpler HTML or increase timeout.");
+    }
+    throw new Error(`Failed to generate screenshot from HTML: ${error.message}`);
+  } finally {
+    await closeBrowser(browser);
+  }
+}
+__name(htmlToScreenshot, "htmlToScreenshot");
+async function urlToScreenshot(args, env) {
+  const { url, format = "png", fullPage = true, viewport } = args;
+  try {
+    new URL(url);
+  } catch {
+    throw new Error("Invalid URL provided. Must be a valid HTTP/HTTPS URL.");
+  }
+  const browser = await launchBrowser(env.BROWSER);
+  try {
+    if (viewport) {
+      const page = await browser.newPage();
+      await page.setViewport({
+        width: viewport.width || 1280,
+        height: viewport.height || 720,
+        deviceScaleFactor: 2
+        // High DPI for sharp images
+      });
+      await page.close();
+    }
+    const imageBuffer = await generateScreenshotFromUrl(browser, url, format, fullPage);
+    const isDev = true;
+    const { publicUrl } = await uploadImageToR2(env.R2_BUCKET, imageBuffer, format, "converted/url-screenshot", isDev);
+    return { imageUrl: publicUrl };
+  } catch (error) {
+    if (error.message.includes("timeout")) {
+      throw new Error("Screenshot generation timed out. The webpage may be too complex or slow to load.");
+    }
+    if (error.message.includes("net::")) {
+      throw new Error("Failed to load URL. Check that the URL is publicly accessible.");
+    }
+    throw new Error(`Failed to generate screenshot from URL: ${error.message}`);
+  } finally {
+    await closeBrowser(browser);
+  }
+}
+__name(urlToScreenshot, "urlToScreenshot");
+
 // src/mcp/server.ts
 async function handleMCPRequest(request, env) {
   const { id, method, params } = request;
@@ -20095,6 +20286,12 @@ async function handleMCPRequest(request, env) {
             case "markdown_to_pdf":
               result = await markdownToPdf(args, env);
               break;
+            case "html_to_screenshot":
+              result = await htmlToScreenshot(args, env);
+              break;
+            case "url_to_screenshot":
+              result = await urlToScreenshot(args, env);
+              break;
             default:
               return createInternalError(
                 id,
@@ -20135,8 +20332,8 @@ app.get("/health", (c2) => {
   return c2.json({
     status: "ok",
     version: "1.0.0",
-    tools: 3,
-    // Phase 2: 3 PDF tools implemented
+    tools: 5,
+    // Phase 3: 5 tools implemented (3 PDF + 2 screenshots)
     totalPlanned: 13
   });
 });
@@ -20407,7 +20604,7 @@ var drainBody = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "drainBody");
 var middleware_ensure_req_body_drained_default = drainBody;
 
-// .wrangler/tmp/bundle-UcTsMa/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-8icYKa/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default
 ];
@@ -20440,7 +20637,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-UcTsMa/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-8icYKa/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

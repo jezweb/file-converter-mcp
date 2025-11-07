@@ -107,9 +107,69 @@ export const tools: MCPTool[] = [
     },
   },
 
-  // Phase 3: Browser Rendering Screenshots
-  // - html_to_screenshot
-  // - url_to_screenshot
+  // Phase 3: Browser Rendering Screenshots (2 tools)
+  {
+    name: 'html_to_screenshot',
+    description: 'Convert HTML/CSS to screenshot image (PNG, JPEG, or WebP) using Cloudflare Browser Rendering. Captures full page or custom viewport. Returns publicly accessible URL to generated image. Ideal for visual previews, thumbnails, or capturing dynamically generated content.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        html: {
+          type: 'string',
+          description: 'HTML content to capture (must be valid HTML). Can include inline CSS styles or <style> tags.',
+        },
+        format: {
+          type: 'string',
+          enum: ['png', 'jpeg', 'webp'],
+          description: 'Image format. Default: png. PNG supports transparency, JPEG is smaller, WebP is most efficient.',
+        },
+        fullPage: {
+          type: 'boolean',
+          description: 'Capture full page height (true) or single viewport (false). Default: true.',
+        },
+        viewport: {
+          type: 'object',
+          properties: {
+            width: { type: 'number', description: 'Viewport width in pixels. Default: 1280' },
+            height: { type: 'number', description: 'Viewport height in pixels. Default: 720' },
+          },
+          description: 'Custom viewport size for screenshot. Uses 2x device scale for sharp images.',
+        },
+      },
+      required: ['html'],
+    },
+  },
+  {
+    name: 'url_to_screenshot',
+    description: 'Capture screenshot of any publicly accessible webpage by URL using Cloudflare Browser Rendering. Waits for page load and network idle. Supports full page capture or custom viewport. Returns publicly accessible URL to generated image.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        url: {
+          type: 'string',
+          description: 'URL of webpage to capture (must be publicly accessible via HTTP/HTTPS). Example: https://example.com',
+        },
+        format: {
+          type: 'string',
+          enum: ['png', 'jpeg', 'webp'],
+          description: 'Image format. Default: png.',
+        },
+        fullPage: {
+          type: 'boolean',
+          description: 'Capture full page height (true) or single viewport (false). Default: true.',
+        },
+        viewport: {
+          type: 'object',
+          properties: {
+            width: { type: 'number', description: 'Viewport width in pixels. Default: 1280' },
+            height: { type: 'number', description: 'Viewport height in pixels. Default: 720' },
+          },
+          description: 'Custom viewport size for screenshot.',
+        },
+      },
+      required: ['url'],
+    },
+  },
 
   // Phase 4: Workers AI Markdown
   // - document_to_markdown

@@ -8,6 +8,7 @@ import {
   createJsonResult,
 } from '../utils/responses';
 import { htmlToPdf, urlToPdf, markdownToPdf } from '../handlers/browser-pdf';
+import { htmlToScreenshot, urlToScreenshot } from '../handlers/browser-screenshot';
 
 export async function handleMCPRequest(
   request: MCPRequest,
@@ -76,6 +77,15 @@ export async function handleMCPRequest(
 
             case 'markdown_to_pdf':
               result = await markdownToPdf(args, env);
+              break;
+
+            // Phase 3: Browser Rendering Screenshots
+            case 'html_to_screenshot':
+              result = await htmlToScreenshot(args, env);
+              break;
+
+            case 'url_to_screenshot':
+              result = await urlToScreenshot(args, env);
               break;
 
             // Future phases will add more tools here

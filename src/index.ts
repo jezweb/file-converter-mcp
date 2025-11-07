@@ -19,7 +19,7 @@ app.get('/health', (c) => {
   return c.json({
     status: 'ok',
     version: '1.0.0',
-    tools: 3, // Phase 2: 3 PDF tools implemented
+    tools: 5, // Phase 3: 5 tools implemented (3 PDF + 2 screenshots)
     totalPlanned: 13,
   });
 });
