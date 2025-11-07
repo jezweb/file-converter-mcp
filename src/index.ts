@@ -215,6 +215,7 @@ app.get('/', (c) => {
     const configs = {
       'better-chatbot': \`{
   "url": "${deployUrl}/mcp",
+  "transport": "http",
   "headers": {
     "Authorization": "Bearer YOUR_TOKEN"
   }
@@ -290,7 +291,12 @@ const response = await client.responses.create({
 
     <div class="section">
       <h2>🚀 Connect to MCP Clients</h2>
-      <p style="margin-bottom: 1.5rem; color: #4a5568;">Choose your preferred client to get started:</p>
+      <p style="margin-bottom: 1rem; color: #4a5568;">Choose your preferred client to get started:</p>
+
+      <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
+        <strong style="color: #92400e;">⚠️ Important:</strong>
+        <span style="color: #78350f;">This server uses <strong>HTTP transport</strong>, not SSE. Always include <code style="background: #fed7aa; padding: 0.125rem 0.25rem; border-radius: 3px;">"transport": "http"</code> in your configuration.</span>
+      </div>
 
       <div class="connection-grid">
         <!-- Better Chatbot -->
@@ -304,6 +310,7 @@ const response = await client.responses.create({
           </div>
           <pre class="connection-code">{
   "url": "${deployUrl}/mcp",
+  "transport": "http",
   "headers": {
     "Authorization": "Bearer YOUR_TOKEN"
   }
