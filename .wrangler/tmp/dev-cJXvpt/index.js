@@ -55,7 +55,7 @@ var __privateSet = (obj, member, value, setter) => {
   return value;
 };
 
-// .wrangler/tmp/bundle-bygjUT/checked-fetch.js
+// .wrangler/tmp/bundle-iuZbtB/checked-fetch.js
 function checkURL(request, init) {
   const url = request instanceof URL ? request : new URL(
     (typeof request === "string" ? new Request(request, init) : request).url
@@ -73,7 +73,7 @@ function checkURL(request, init) {
 }
 var urls;
 var init_checked_fetch = __esm({
-  ".wrangler/tmp/bundle-bygjUT/checked-fetch.js"() {
+  ".wrangler/tmp/bundle-iuZbtB/checked-fetch.js"() {
     "use strict";
     urls = /* @__PURE__ */ new Set();
     __name(checkURL, "checkURL");
@@ -710,11 +710,11 @@ var init_BrowserWebSocketTransport = __esm({
   }
 });
 
-// .wrangler/tmp/bundle-bygjUT/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-iuZbtB/middleware-loader.entry.ts
 init_checked_fetch();
 init_modules_watch_stub();
 
-// .wrangler/tmp/bundle-bygjUT/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-iuZbtB/middleware-insertion-facade.js
 init_checked_fetch();
 init_modules_watch_stub();
 
@@ -2599,9 +2599,30 @@ var tools = [
       },
       required: ["fileUrl"]
     }
+  },
+  // Phase 6: PDF.co Office Conversions (1 tool)
+  {
+    name: "office_to_pdf",
+    description: "Convert Office documents (DOCX, DOC, XLSX, XLS, PPTX, PPT, RTF, TXT, CSV, XPS) to PDF using PDF.co API. Returns permanently stored PDF URL. NOTE: PowerPoint files (PPT/PPTX) have limited support - PDF.co may not provide assistance for rendering issues. Office macros are disabled. For Excel files, use worksheetIndex to convert specific sheet (1=first, 2=second, etc.) or omit to convert all sheets.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        fileUrl: {
+          type: "string",
+          description: "Publicly accessible URL to Office file. Supported formats: .doc, .docx, .xls, .xlsx, .ppt, .pptx, .csv, .rtf, .txt, .xps. File must be downloadable without authentication."
+        },
+        worksheetIndex: {
+          type: "number",
+          description: "Excel files only: 1-based worksheet index to convert. Use 1 for first sheet, 2 for second, etc. Omit to convert all sheets to multi-page PDF. This parameter is ignored for non-Excel files."
+        },
+        autosize: {
+          type: "boolean",
+          description: "Excel files only: Auto-adjust page dimensions to fit content. Recommended for better readability. Default: false. This parameter is ignored for non-Excel files."
+        }
+      },
+      required: ["fileUrl"]
+    }
   }
-  // Phase 6: PDF.co Office Conversions
-  // - office_to_pdf
   // Phase 7: PDF.co PDF Operations
   // - merge_pdfs
   // - split_pdf
@@ -20473,6 +20494,50 @@ async function convertExcelToJson(params, env) {
   );
 }
 __name(convertExcelToJson, "convertExcelToJson");
+function getOfficeToPdfEndpoint(fileExtension) {
+  const ext = fileExtension.toLowerCase();
+  if ([".xls", ".xlsx", ".csv"].includes(ext)) {
+    return "/pdf/convert/from/csv";
+  }
+  return "/pdf/convert/from/doc";
+}
+__name(getOfficeToPdfEndpoint, "getOfficeToPdfEndpoint");
+async function convertOfficeToPdf(params, env, fileExtension) {
+  const apiKey = env.PDFCO_API_KEY;
+  if (!apiKey) {
+    throw new Error("PDFCO_API_KEY environment variable is not set");
+  }
+  try {
+    new URL(params.url);
+  } catch {
+    throw new Error("Invalid file URL provided. Must be a valid HTTP/HTTPS URL.");
+  }
+  const endpoint = getOfficeToPdfEndpoint(fileExtension);
+  const requestBody = {
+    url: params.url,
+    async: params.async || false
+  };
+  if (params.name)
+    requestBody.name = params.name;
+  if (params.expiration)
+    requestBody.expiration = params.expiration;
+  if (params.pages)
+    requestBody.pages = params.pages;
+  if (endpoint === "/pdf/convert/from/csv") {
+    if (params.worksheetIndex !== void 0) {
+      requestBody.worksheetIndex = params.worksheetIndex;
+    }
+    if (params.autosize !== void 0) {
+      requestBody.autosize = params.autosize;
+    }
+  }
+  return pdfcoRequest(
+    endpoint,
+    requestBody,
+    apiKey
+  );
+}
+__name(convertOfficeToPdf, "convertOfficeToPdf");
 
 // src/handlers/pdfco-excel.ts
 async function excelToJson(args, env) {
@@ -20555,6 +20620,124 @@ async function excelToJson(args, env) {
 }
 __name(excelToJson, "excelToJson");
 
+// src/handlers/pdfco-convert.ts
+init_checked_fetch();
+init_modules_watch_stub();
+var SUPPORTED_EXTENSIONS = [
+  ".doc",
+  ".docx",
+  ".xls",
+  ".xlsx",
+  ".ppt",
+  ".pptx",
+  ".csv",
+  ".rtf",
+  ".txt",
+  ".xps"
+];
+var LIMITED_SUPPORT_EXTENSIONS = [".ppt", ".pptx"];
+function getFileExtension(url) {
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    const ext = pathname.substring(pathname.lastIndexOf(".")).toLowerCase();
+    return ext;
+  } catch {
+    throw new Error("Invalid file URL provided. Cannot extract file extension.");
+  }
+}
+__name(getFileExtension, "getFileExtension");
+async function officeToPdf(args, env) {
+  const { fileUrl, worksheetIndex, autosize } = args;
+  try {
+    new URL(fileUrl);
+  } catch {
+    throw new Error("Invalid file URL provided. Must be a valid HTTP/HTTPS URL.");
+  }
+  const fileExtension = getFileExtension(fileUrl);
+  if (!SUPPORTED_EXTENSIONS.includes(fileExtension)) {
+    throw new Error(
+      `Unsupported file type: ${fileExtension}. Supported formats: ${SUPPORTED_EXTENSIONS.join(", ")}`
+    );
+  }
+  const warnings = [];
+  if (LIMITED_SUPPORT_EXTENSIONS.includes(fileExtension)) {
+    warnings.push(
+      `PowerPoint files (${fileExtension}) have limited support. PDF.co may not provide assistance for rendering issues or bugs. Consider using Browser Rendering for critical presentations.`
+    );
+  }
+  const macroExtensions = [".docm", ".xlsm", ".pptm"];
+  const hasLikelyMacros = macroExtensions.some((ext) => fileUrl.toLowerCase().includes(ext));
+  if (hasLikelyMacros) {
+    warnings.push(
+      "This file appears to be macro-enabled. Office macros are disabled and will not execute during conversion."
+    );
+  }
+  if (worksheetIndex !== void 0) {
+    if (![".xls", ".xlsx", ".csv"].includes(fileExtension)) {
+      throw new Error(
+        `worksheetIndex parameter is only supported for Excel files (.xls, .xlsx, .csv). Current file type: ${fileExtension}`
+      );
+    }
+    if (!Number.isInteger(worksheetIndex) || worksheetIndex < 1) {
+      throw new Error(
+        "Invalid worksheetIndex. Must be a positive integer (1 for first sheet, 2 for second, etc.)"
+      );
+    }
+  }
+  let pdfcoResponse;
+  try {
+    pdfcoResponse = await convertOfficeToPdf(
+      {
+        url: fileUrl,
+        worksheetIndex,
+        autosize,
+        async: false
+        // Sync mode for simplicity (use async for files > 50MB)
+      },
+      env,
+      fileExtension
+    );
+  } catch (error) {
+    throw new Error(`Office to PDF conversion failed: ${error.message}`);
+  }
+  if (!pdfcoResponse.url) {
+    throw new Error(
+      "PDF.co conversion succeeded but did not return a download URL. Please retry."
+    );
+  }
+  let pdfResponse;
+  try {
+    pdfResponse = await fetch(pdfcoResponse.url);
+    if (!pdfResponse.ok) {
+      throw new Error(
+        `Failed to download converted PDF: HTTP ${pdfResponse.status}`
+      );
+    }
+  } catch (error) {
+    throw new Error(
+      `Failed to download PDF from PDF.co: ${error.message}. The file may have expired.`
+    );
+  }
+  const pdfBuffer = await pdfResponse.arrayBuffer();
+  const bucketName = env.R2_BUCKET?.name || "";
+  const isDev = bucketName.includes("dev");
+  const { publicUrl } = await uploadPdfToR2(
+    env.R2_BUCKET,
+    pdfBuffer,
+    "office-to-pdf",
+    isDev
+  );
+  return {
+    pdfUrl: publicUrl,
+    pageCount: pdfcoResponse.pageCount,
+    fileType: fileExtension,
+    ...warnings.length > 0 && { warnings },
+    remainingCredits: pdfcoResponse.remainingCredits
+  };
+}
+__name(officeToPdf, "officeToPdf");
+
 // src/mcp/server.ts
 async function handleMCPRequest(request, env) {
   const { id, method, params } = request;
@@ -20621,6 +20804,9 @@ async function handleMCPRequest(request, env) {
             case "excel_to_json":
               result = await excelToJson(args, env);
               break;
+            case "office_to_pdf":
+              result = await officeToPdf(args, env);
+              break;
             default:
               return createInternalError(
                 id,
@@ -20661,8 +20847,8 @@ app.get("/health", (c2) => {
   return c2.json({
     status: "ok",
     version: "1.0.0",
-    tools: 7,
-    // Phase 5: 7 tools implemented (3 PDF + 2 screenshots + 1 markdown + 1 excel)
+    tools: 8,
+    // Phase 6: 8 tools implemented (3 PDF + 2 screenshots + 1 markdown + 1 excel + 1 office)
     totalPlanned: 13
   });
 });
@@ -20933,7 +21119,7 @@ var drainBody = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "drainBody");
 var middleware_ensure_req_body_drained_default = drainBody;
 
-// .wrangler/tmp/bundle-bygjUT/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-iuZbtB/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default
 ];
@@ -20966,7 +21152,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-bygjUT/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-iuZbtB/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

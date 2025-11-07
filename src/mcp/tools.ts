@@ -211,8 +211,29 @@ export const tools: MCPTool[] = [
     },
   },
 
-  // Phase 6: PDF.co Office Conversions
-  // - office_to_pdf
+  // Phase 6: PDF.co Office Conversions (1 tool)
+  {
+    name: 'office_to_pdf',
+    description: 'Convert Office documents (DOCX, DOC, XLSX, XLS, PPTX, PPT, RTF, TXT, CSV, XPS) to PDF using PDF.co API. Returns permanently stored PDF URL. NOTE: PowerPoint files (PPT/PPTX) have limited support - PDF.co may not provide assistance for rendering issues. Office macros are disabled. For Excel files, use worksheetIndex to convert specific sheet (1=first, 2=second, etc.) or omit to convert all sheets.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        fileUrl: {
+          type: 'string',
+          description: 'Publicly accessible URL to Office file. Supported formats: .doc, .docx, .xls, .xlsx, .ppt, .pptx, .csv, .rtf, .txt, .xps. File must be downloadable without authentication.',
+        },
+        worksheetIndex: {
+          type: 'number',
+          description: 'Excel files only: 1-based worksheet index to convert. Use 1 for first sheet, 2 for second, etc. Omit to convert all sheets to multi-page PDF. This parameter is ignored for non-Excel files.',
+        },
+        autosize: {
+          type: 'boolean',
+          description: 'Excel files only: Auto-adjust page dimensions to fit content. Recommended for better readability. Default: false. This parameter is ignored for non-Excel files.',
+        },
+      },
+      required: ['fileUrl'],
+    },
+  },
 
   // Phase 7: PDF.co PDF Operations
   // - merge_pdfs

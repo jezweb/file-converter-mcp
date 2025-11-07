@@ -1,7 +1,7 @@
 # Session State
 
-**Current Phase**: Phase 5 (Complete)
-**Current Stage**: Ready for Phase 6
+**Current Phase**: Phase 6 (Complete)
+**Current Stage**: Ready for Phase 7
 **Last Update**: 2025-01-15
 **Planning Docs**: `docs/IMPLEMENTATION_PHASES.md`, `docs/ARCHITECTURE.md`, `CLAUDE.md`
 
@@ -244,13 +244,55 @@
 - Rate limit: 2 req/sec (free), 5 req/sec (paid), 25 req/sec (subscription)
 - BOM character (0xFEFF) stripped from JSON response text
 
-**Next Action**: Phase 6 - Implement PDF.co Office Conversions (office_to_pdf tool)
+**Next Action**: Phase 7 - Implement PDF.co PDF Operations (merge_pdfs, split_pdf, extract_pdf_tables tools)
 
 ---
 
-## Phase 6: PDF.co Office Conversions ⏸️
-**Type**: Implementation | **Est**: 1h
-**Spec**: `docs/IMPLEMENTATION_PHASES.md#phase-6`
+## Phase 6: PDF.co Office Conversions ✅
+**Type**: Implementation | **Completed**: 2025-01-15 | **Checkpoint**: (to be created)
+**Summary**: Implemented office_to_pdf tool using PDF.co API with dual endpoint support (DOC/XLS)
+
+**Completed**:
+- [x] Researched PDF.co Office to PDF conversion API endpoints
+- [x] Extended `src/lib/pdfco-client.ts` with convertOfficeToPdf() function
+- [x] Created `src/handlers/pdfco-convert.ts` - Office to PDF handler
+- [x] Registered office_to_pdf tool in `src/mcp/tools.ts` with complete schema
+- [x] Wired handler in `src/mcp/server.ts` dispatcher
+- [x] Updated health endpoint (tools: 8, totalPlanned: 13)
+- [x] Tested with DOCX file (verified conversion and PDF generation)
+
+**Key Files Created**:
+- `src/handlers/pdfco-convert.ts` - officeToPdf handler (~180 lines)
+
+**Key Files Updated**:
+- `src/lib/pdfco-client.ts` - Added PDFCoOfficeToPdfResponse, OfficeToPdfParams, getOfficeToPdfEndpoint(), convertOfficeToPdf()
+- `src/mcp/tools.ts` - Added office_to_pdf tool definition (now 8/13 tools)
+- `src/mcp/server.ts` - Added import and case statement for office_to_pdf
+- `src/index.ts` - Updated health endpoint (tools: 8)
+
+**PDF.co Endpoints**:
+- `/v1/pdf/convert/from/doc` - For DOCX, DOC, PPTX, PPT, RTF, TXT, XPS
+- `/v1/pdf/convert/from/csv` - For XLSX, XLS, CSV
+
+**Verification Results**:
+- ✅ `office_to_pdf` - Converts DOCX to PDF (9 pages, 174KB)
+- ✅ Uploads to R2 and returns public URL
+- ✅ Supported formats: .doc, .docx, .xls, .xlsx, .ppt, .pptx, .csv, .rtf, .txt, .xps
+- ✅ Excel-specific parameters: worksheetIndex, autosize
+- ✅ Comprehensive error handling (402, 403, 429, 442, 445 status codes)
+- ✅ Warnings for limited-support formats (PPTX/PPT) and macro files
+
+**Notes**:
+- PDF.co uses two different endpoints based on file type (auto-selected from extension)
+- PowerPoint files (PPTX/PPT) have limited support - PDF.co may not provide assistance for issues
+- Office macros are disabled and will not execute during conversion
+- Excel files support worksheetIndex parameter (1-based: 1=first sheet, 2=second, etc.)
+- Excel files support autosize parameter for better page fitting
+- Output PDFs uploaded to R2 for permanent storage (PDF.co temporary URLs expire in 60 minutes)
+- File extension validation with supported formats list
+- Remaining credits: 6,974
+
+**Next Action**: Phase 7 - Implement PDF.co PDF Operations (merge_pdfs, split_pdf, extract_pdf_tables tools)
 
 ---
 

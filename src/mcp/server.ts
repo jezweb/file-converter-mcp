@@ -11,6 +11,7 @@ import { htmlToPdf, urlToPdf, markdownToPdf } from '../handlers/browser-pdf';
 import { htmlToScreenshot, urlToScreenshot } from '../handlers/browser-screenshot';
 import { documentToMarkdown } from '../handlers/ai-markdown';
 import { excelToJson } from '../handlers/pdfco-excel';
+import { officeToPdf } from '../handlers/pdfco-convert';
 
 export async function handleMCPRequest(
   request: MCPRequest,
@@ -98,6 +99,11 @@ export async function handleMCPRequest(
             // Phase 5: PDF.co Data Extraction
             case 'excel_to_json':
               result = await excelToJson(args, env);
+              break;
+
+            // Phase 6: PDF.co Office Conversions
+            case 'office_to_pdf':
+              result = await officeToPdf(args, env);
               break;
 
             // Future phases will add more tools here
