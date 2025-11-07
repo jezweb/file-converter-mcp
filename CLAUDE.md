@@ -1,9 +1,8 @@
 # File Converter MCP Server - Project Context
 
 **Project Type**: Cloudflare Workers MCP Server
-**Status**: ✅ DEPLOYED TO PRODUCTION (All 13 tools complete)
-**Production URL**: https://file-converter-mcp.webfonts.workers.dev
-**Owner**: Jeremy Dawes (jeremy@jezweb.net)
+**Status**: ✅ Production Ready (All 13 tools complete)
+**Deployment**: Configure via wrangler.jsonc
 
 ---
 
@@ -101,7 +100,7 @@ src/
 
 ```bash
 # .dev.vars (local development)
-PDFCO_API_KEY=jeremy@jezweb.net_iHRiPdX1Llzuz6zRaQmgRM0iHyK8foxJzmwWQGQQLwlZYyMKvGG6cyRZONpUTvEW
+PDFCO_API_KEY=your_pdfco_api_key_here
 AUTH_TOKEN=your_bearer_token_here
 ```
 
@@ -470,7 +469,7 @@ curl -X POST http://localhost:8787/mcp \
 ```bash
 # Set production secrets
 npx wrangler secret put PDFCO_API_KEY
-# Paste: jeremy@jezweb.net_iHRiPdX1Llzuz6zRaQmgRM0iHyK8foxJzmwWQGQQLwlZYyMKvGG6cyRZONpUTvEW
+# Paste your PDF.co API key
 
 npx wrangler secret put AUTH_TOKEN
 # Paste: generated bearer token
@@ -633,16 +632,11 @@ case 'html_to_pdf': {
 
 ---
 
-## Contact & Support
+## Development Setup
 
-**Owner**: Jeremy Dawes (Jez)
-**Email**: jeremy@jezweb.net
-**Phone**: +61411056876
-**Website**: www.jezweb.com.au
-
-**Accounts**:
-- Cloudflare: jeremy@jezweb.net (0460574641fdbb98159c98ebf593e2bd)
-- PDF.co: jeremy@jezweb.net
+**Required Accounts**:
+- Cloudflare account with Workers (configure via `wrangler login`)
+- PDF.co account with API key
 
 ---
 

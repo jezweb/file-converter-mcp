@@ -1,8 +1,8 @@
 # API Endpoints: File Converter MCP Server
 
-**Base URL**: `https://file-converter-mcp.<subdomain>.workers.dev`
-**Transport**: SSE (Server-Sent Events) for MCP
-**Auth**: None (trusted client assumed)
+**Base URL**: `https://file-converter-mcp.YOUR_SUBDOMAIN.workers.dev`
+**Transport**: HTTP JSON-RPC 2.0
+**Auth**: Bearer token required for `/mcp` endpoint
 
 ---
 
@@ -38,43 +38,58 @@
 
 ---
 
-## MCP Transport
+## MCP Endpoint
 
-### GET /sse
+### POST /mcp
 
-**Purpose**: Server-Sent Events endpoint for MCP protocol
+**Purpose**: MCP JSON-RPC 2.0 endpoint for tool execution
+
+**Auth**: Bearer token required
 
 **Headers**:
-- `Accept: text/event-stream`
-- `Cache-Control: no-cache`
+- `Authorization: Bearer YOUR_TOKEN`
+- `Content-Type: application/json`
 
-**Response**: SSE stream
-
-**MCP Handshake**:
+**Request Format** (JSON-RPC 2.0):
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "html_to_pdf",
+    "arguments": {
+      "html": "<h1>Test</h1>",
+      "format": "A4"
+    }
+  }
+}
 ```
-Client → Server: Connect to /sse
-Server → Client: Send tool registry
-Client → Server: Call tool with params
-Server → Client: Return tool result
+
+**Response Format**:
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "content": [{
+      "type": "text",
+      "text": "{\"pdfUrl\":\"https://...\"}"
+    }]
+  }
+}
 ```
 
-**Example SSE Messages**:
-```
-event: tool_call
-data: {"tool":"convert_to_pdf","id":"req-123","params":{...}}
-
-event: tool_result
-data: {"id":"req-123","result":{...}}
-
-event: tool_error
-data: {"id":"req-123","error":"File not found"}
-```
+**Supported Methods**:
+- `initialize` - Protocol handshake
+- `tools/list` - Get all available tools
+- `tools/call` - Execute a specific tool
 
 ---
 
 ## MCP Tools
 
-All tools are called via the MCP SSE transport. Below are their schemas and behaviors.
+All tools are called via the `POST /mcp` endpoint with method `tools/call`. Below are their schemas and behaviors.
 
 ---
 

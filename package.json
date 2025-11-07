@@ -18,6 +18,14 @@
   ],
   "author": "Jeremy Dawes <jeremy@jezweb.net>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/file-converter-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/file-converter-mcp/issues"
+  },
+  "homepage": "https://github.com/YOUR_USERNAME/file-converter-mcp#readme",
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241127.0",
     "typescript": "^5.7.2",

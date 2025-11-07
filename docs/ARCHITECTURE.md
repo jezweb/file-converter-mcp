@@ -1,7 +1,7 @@
 # Architecture: File Converter MCP Server
 
 **Platform**: Cloudflare Workers
-**Transport**: HTTP with Server-Sent Events (SSE)
+**Transport**: HTTP JSON-RPC 2.0
 **Primary APIs**: PDF.co, Cloudflare Workers AI
 
 ---
@@ -14,14 +14,14 @@
 │                  (Vercel/Cloudflare)                    │
 └──────────────────────┬──────────────────────────────────┘
                        │
-                       │ SSE (MCP Protocol)
+                       │ HTTP JSON-RPC 2.0
                        ↓
 ┌─────────────────────────────────────────────────────────┐
 │          File Converter MCP Worker                      │
 │  ┌────────────────────────────────────────────────┐    │
 │  │            Hono HTTP Server                    │    │
 │  │  ┌──────────────┐      ┌──────────────┐       │    │
-│  │  │ /sse         │      │  /health     │       │    │
+│  │  │ POST /mcp    │      │  /health     │       │    │
 │  │  │ (MCP Tools)  │      │  (Status)    │       │    │
 │  │  └──────┬───────┘      └──────────────┘       │    │
 │  └─────────┼────────────────────────────────────────┘  │
@@ -165,7 +165,7 @@
 ## Service Boundaries
 
 ### MCP Worker Responsibilities
-- Receive tool calls via SSE transport
+- Receive tool calls via HTTP JSON-RPC 2.0
 - Download files from public URLs (Vercel Blob, S3, R2)
 - Coordinate conversion APIs (PDF.co, Workers AI)
 - Upload converted files to R2 with public URLs
@@ -314,7 +314,7 @@ file-converter.yourdomain.com
 |-------|-----------|---------|
 | **Runtime** | Cloudflare Workers | Serverless edge compute |
 | **Framework** | Hono | HTTP routing and middleware |
-| **Protocol** | MCP (SSE) | Agent communication |
+| **Protocol** | MCP (HTTP JSON-RPC 2.0) | Agent communication |
 | **Conversion** | PDF.co API | Document conversions |
 | **AI** | Cloudflare Workers AI | Free markdown extraction |
 | **Storage** | Cloudflare R2 | Converted file hosting |

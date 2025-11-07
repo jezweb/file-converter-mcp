@@ -55,11 +55,11 @@ npm install
 
 ### 3. Configuration
 
-Create `.dev.vars` for local development:
+Copy `.dev.vars.example` to `.dev.vars` and add your keys:
 
 ```bash
-PDFCO_API_KEY=your_api_key_here
-AUTH_TOKEN=your_bearer_token_here
+cp .dev.vars.example .dev.vars
+# Edit .dev.vars with your actual keys
 ```
 
 Update `wrangler.jsonc`:
@@ -111,7 +111,7 @@ npx wrangler deploy
 ```
 
 Your MCP server is now live at:
-`https://file-converter-mcp.webfonts.workers.dev`
+`https://file-converter-mcp.YOUR_SUBDOMAIN.workers.dev`
 
 ---
 
@@ -123,9 +123,9 @@ Your MCP server is now live at:
 2. Click "Add Server"
 3. Enter:
    - **Name**: File Converter
-   - **URL**: `https://file-converter-mcp.webfonts.workers.dev/mcp`
+   - **URL**: `https://file-converter-mcp.YOUR_SUBDOMAIN.workers.dev/mcp`
    - **Transport**: HTTP
-   - **Headers**: `Authorization: Bearer epF77o5Oz5y/bx+mA/27aZ6V3RJo232DFFgmKhpK9qU=`
+   - **Headers**: `Authorization: Bearer YOUR_TOKEN_HERE`
 4. Save
 
 ### Available Tools (13 Tools)
@@ -516,6 +516,41 @@ MIT
 
 ---
 
+## Security
+
+### API Keys & Secrets
+- **Never commit `.dev.vars`** - Store secrets locally only
+- **Use Wrangler secrets** for production: `npx wrangler secret put KEY_NAME`
+- **Rotate tokens regularly** - Generate new tokens periodically
+- **Monitor usage** - Check Cloudflare Analytics for unusual activity
+
+### Authentication
+- **Bearer token required** for `/mcp` endpoint
+- **Generate secure tokens**: `openssl rand -base64 32`
+- **Store safely** - Use environment variables, never hardcode
+- **Configure in MCP client** headers: `Authorization: Bearer YOUR_TOKEN`
+
+### File Security
+- **Input files** must be publicly accessible URLs
+- **Output files** stored in R2 with public URLs
+- **No authentication** on R2 URLs by default
+- **Consider signed URLs** for sensitive data (requires custom implementation)
+
+### Rate Limiting
+- **Cloudflare Workers**: Subject to plan limits
+- **Browser Rendering**: 2 req/sec (free), 25 req/sec (paid)
+- **PDF.co**: Varies by plan (2-25 req/sec)
+- **Monitor costs** via Cloudflare dashboard
+
+### Best Practices
+1. Use `.dev.vars.example` as template, never commit actual `.dev.vars`
+2. Rotate production secrets after any potential exposure
+3. Monitor R2 storage usage to avoid unexpected costs
+4. Set up Cloudflare alerts for error rate spikes
+5. Review logs regularly for unauthorized access attempts
+
+---
+
 ## Links
 
 - **Documentation**: [/docs](./docs)
@@ -526,12 +561,18 @@ MIT
 
 ---
 
-## Support
+## Contributing
 
-- **Issues**: Open a GitHub issue
-- **Email**: jeremy@jezweb.net
+Contributions welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+
+- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/file-converter-mcp/issues)
+- **Pull Requests**: [GitHub PRs](https://github.com/YOUR_USERNAME/file-converter-mcp/pulls)
 - **MCP Community**: https://discord.gg/modelcontextprotocol
 
 ---
 
-**Built by Jeremy Dawes (Jez) | Powered by Cloudflare & PDF.co**
+## License
+
+MIT License - see [LICENSE](./LICENSE) for details.
+
+**Built with Cloudflare & PDF.co**

@@ -551,10 +551,10 @@ const response = await client.responses.create({
     </div>
 
     <div class="section" style="text-align: center; color: #718096; padding-top: 2rem; border-top: 1px solid #e2e8f0;">
-      <p>Built by Jeremy Dawes (Jez) | Powered by Cloudflare & PDF.co</p>
+      <p>Powered by Cloudflare & PDF.co</p>
       <p style="margin-top: 0.5rem; font-size: 0.9rem;">
-        <a href="https://www.jezweb.com.au" style="color: #667eea; text-decoration: none;">jezweb.com.au</a> |
-        <a href="mailto:jeremy@jezweb.net" style="color: #667eea; text-decoration: none;">jeremy@jezweb.net</a>
+        <a href="https://github.com/YOUR_USERNAME/file-converter-mcp" style="color: #667eea; text-decoration: none;">View on GitHub</a> |
+        <a href="https://github.com/YOUR_USERNAME/file-converter-mcp/issues" style="color: #667eea; text-decoration: none;">Report Issues</a>
       </p>
     </div>
   </div>
