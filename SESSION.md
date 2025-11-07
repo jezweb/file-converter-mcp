@@ -160,7 +160,7 @@
 ---
 
 ## Phase 4: Workers AI Markdown ✅
-**Type**: Implementation | **Completed**: 2025-01-15 | **Checkpoint**: (pending)
+**Type**: Implementation | **Completed**: 2025-01-15 | **Checkpoint**: c7b1474
 **Summary**: Implemented document_to_markdown tool using Workers AI toMarkdown() API
 
 **Completed**:
