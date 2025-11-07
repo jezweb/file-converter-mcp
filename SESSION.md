@@ -249,7 +249,7 @@
 ---
 
 ## Phase 6: PDF.co Office Conversions ✅
-**Type**: Implementation | **Completed**: 2025-01-15 | **Checkpoint**: (to be created)
+**Type**: Implementation | **Completed**: 2025-01-15 | **Checkpoint**: 2d1749a
 **Summary**: Implemented office_to_pdf tool using PDF.co API with dual endpoint support (DOC/XLS)
 
 **Completed**:
