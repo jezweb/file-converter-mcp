@@ -111,7 +111,7 @@ npx wrangler deploy
 ```
 
 Your MCP server is now live at:
-`https://file-converter-mcp.<subdomain>.workers.dev`
+`https://file-converter-mcp.webfonts.workers.dev`
 
 ---
 
@@ -123,12 +123,12 @@ Your MCP server is now live at:
 2. Click "Add Server"
 3. Enter:
    - **Name**: File Converter
-   - **URL**: `https://file-converter-mcp.your-worker.workers.dev/mcp`
+   - **URL**: `https://file-converter-mcp.webfonts.workers.dev/mcp`
    - **Transport**: HTTP
-   - **Headers**: `Authorization: Bearer YOUR_TOKEN`
+   - **Headers**: `Authorization: Bearer epF77o5Oz5y/bx+mA/27aZ6V3RJo232DFFgmKhpK9qU=`
 4. Save
 
-### Available Tools (12 Tools)
+### Available Tools (13 Tools)
 
 #### PDF Generation
 

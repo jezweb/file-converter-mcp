@@ -12,6 +12,8 @@ import { htmlToScreenshot, urlToScreenshot } from '../handlers/browser-screensho
 import { documentToMarkdown } from '../handlers/ai-markdown';
 import { excelToJson } from '../handlers/pdfco-excel';
 import { officeToPdf } from '../handlers/pdfco-convert';
+import { handleMergePdfs, handleSplitPdf, handleExtractPdfTables } from '../handlers/pdfco-operations';
+import { handlePdfToImages, handleDocumentToImages } from '../handlers/browser-images';
 
 export async function handleMCPRequest(
   request: MCPRequest,
@@ -104,6 +106,25 @@ export async function handleMCPRequest(
             // Phase 6: PDF.co Office Conversions
             case 'office_to_pdf':
               result = await officeToPdf(args, env);
+              break;
+
+            // Phase 7: PDF.co PDF Operations
+            case 'merge_pdfs':
+              result = await handleMergePdfs(args, env);
+              break;
+            case 'split_pdf':
+              result = await handleSplitPdf(args, env);
+              break;
+            case 'extract_pdf_tables':
+              result = await handleExtractPdfTables(args, env);
+              break;
+
+            // Phase 8: Browser Rendering Images
+            case 'pdf_to_images':
+              result = await handlePdfToImages(args, env);
+              break;
+            case 'document_to_images':
+              result = await handleDocumentToImages(args, env);
               break;
 
             // Future phases will add more tools here

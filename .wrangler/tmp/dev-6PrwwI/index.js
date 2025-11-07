@@ -55,7 +55,7 @@ var __privateSet = (obj, member, value, setter) => {
   return value;
 };
 
-// .wrangler/tmp/bundle-iuZbtB/checked-fetch.js
+// .wrangler/tmp/bundle-c8eiWa/checked-fetch.js
 function checkURL(request, init) {
   const url = request instanceof URL ? request : new URL(
     (typeof request === "string" ? new Request(request, init) : request).url
@@ -73,7 +73,7 @@ function checkURL(request, init) {
 }
 var urls;
 var init_checked_fetch = __esm({
-  ".wrangler/tmp/bundle-iuZbtB/checked-fetch.js"() {
+  ".wrangler/tmp/bundle-c8eiWa/checked-fetch.js"() {
     "use strict";
     urls = /* @__PURE__ */ new Set();
     __name(checkURL, "checkURL");
@@ -710,11 +710,11 @@ var init_BrowserWebSocketTransport = __esm({
   }
 });
 
-// .wrangler/tmp/bundle-iuZbtB/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-c8eiWa/middleware-loader.entry.ts
 init_checked_fetch();
 init_modules_watch_stub();
 
-// .wrangler/tmp/bundle-iuZbtB/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-c8eiWa/middleware-insertion-facade.js
 init_checked_fetch();
 init_modules_watch_stub();
 
@@ -2622,14 +2622,114 @@ var tools = [
       },
       required: ["fileUrl"]
     }
-  }
+  },
   // Phase 7: PDF.co PDF Operations
-  // - merge_pdfs
-  // - split_pdf
-  // - extract_pdf_tables
+  {
+    name: "merge_pdfs",
+    description: "Combine multiple PDF files into a single PDF with optional bookmarks using PDF.co API. Returns permanently stored PDF URL. IMPORTANT: Requires at least 2 PDF URLs. If bookmarkTitles provided, array length must match fileUrls length. Bookmarks help navigate large merged documents.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        fileUrls: {
+          type: "array",
+          items: { type: "string" },
+          description: 'Array of publicly accessible PDF file URLs to merge (minimum 2). Files must be downloadable without authentication. Example: ["https://example.com/file1.pdf", "https://example.com/file2.pdf"]',
+          minItems: 2
+        },
+        bookmarkTitles: {
+          type: "array",
+          items: { type: "string" },
+          description: 'Optional bookmark titles for each PDF. Must match fileUrls length exactly. Bookmarks appear in PDF readers for easy navigation. Example: ["Introduction", "Chapter 1", "Conclusion"]'
+        }
+      },
+      required: ["fileUrls"]
+    }
+  },
+  {
+    name: "split_pdf",
+    description: 'Split PDF into multiple files by extracting specific page ranges using PDF.co API. Returns array of permanently stored PDF URLs. IMPORTANT: Page indexing is 1-based (first page = 1, not 0). Use "*" to split into individual pages. Supports ranges like "1-2,3-" or "!0" for last page.',
+    inputSchema: {
+      type: "object",
+      properties: {
+        fileUrl: {
+          type: "string",
+          description: "Publicly accessible PDF file URL. Must be downloadable without authentication."
+        },
+        pages: {
+          type: "string",
+          description: 'Page ranges to extract (1-based indexing). Examples: "*" = split into individual pages, "1-2,3-" = pages 1-2 and 3 to end, "1,3,5" = specific pages only, "!0" = last page, "!1" = second-to-last. Default: "*" (all pages individually).'
+        }
+      },
+      required: ["fileUrl"]
+    }
+  },
+  {
+    name: "extract_pdf_tables",
+    description: 'Extract table data from PDF as CSV or JSON using PDF.co API. Returns structured data with row counts. CRITICAL: Page indexing is 0-based (first page = 0, not 1) - different from split_pdf! Use "0-" for all pages. Returns empty data if no tables found. Supports multiple column detection modes for different table styles.',
+    inputSchema: {
+      type: "object",
+      properties: {
+        fileUrl: {
+          type: "string",
+          description: "Publicly accessible PDF file URL. Must be downloadable without authentication."
+        },
+        pages: {
+          type: "string",
+          description: 'Page range to extract (0-based indexing). Examples: "0-" = all pages, "0" = first page only, "1,2,3-7" = specific pages. Default: "0-" (all pages).'
+        },
+        outputFormat: {
+          type: "string",
+          enum: ["csv", "json"],
+          description: 'Output format. "csv" returns raw CSV string, "json" returns parsed array of objects. Default: "csv".'
+        },
+        columnDetectionMode: {
+          type: "string",
+          enum: ["ContentGroupsAndBorders", "ContentGroups", "Borders", "BorderedTables", "ContentGroupsAI"],
+          description: "Table detection mode. ContentGroupsAndBorders (default): balanced detection. BorderedTables: for tables with borders. ContentGroupsAI: AI-powered detection for borderless tables. ContentGroups: text grouping only. Borders: border lines only."
+        }
+      },
+      required: ["fileUrl"]
+    }
+  },
   // Phase 8: Browser Rendering Images
-  // - pdf_to_images
-  // - document_to_images
+  {
+    name: "pdf_to_images",
+    description: "Convert PDF pages to individual images (PNG, JPEG, or WebP). Returns array of publicly accessible image URLs (one per page). Uses PDF.co API for high-quality rendering at 150 DPI. Permanently stores images in R2. IMPORTANT: Page indexing is 0-based in source API. Ideal for PDF thumbnails, page previews, and visual analysis.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        fileUrl: {
+          type: "string",
+          description: "Publicly accessible URL to PDF file. Must be downloadable without authentication. Example: https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
+        },
+        format: {
+          type: "string",
+          enum: ["png", "jpeg", "webp"],
+          description: "Image format. Default: png (lossless, best quality). jpeg: smaller files, lossy compression. webp: best compression efficiency. Choose PNG for text-heavy PDFs, JPEG for photo-heavy documents."
+        }
+      },
+      required: ["fileUrl"]
+    }
+  },
+  {
+    name: "document_to_images",
+    description: "Convert Office documents (DOCX, PPTX, XLSX, etc.) to images via two-step process: Office\u2192PDF\u2192Images. Returns array of publicly accessible image URLs. Supports all Phase 6 Office formats (.doc, .docx, .ppt, .pptx, .xls, .xlsx, .csv, .rtf, .txt, .xps). Permanently stores images in R2. IDEAL FOR: Presentation slide previews, document thumbnails, visual content extraction.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        fileUrl: {
+          type: "string",
+          description: "Publicly accessible URL to Office document. Supported formats: .doc, .docx, .ppt, .pptx, .xls, .xlsx, .csv, .rtf, .txt, .xps. Must be downloadable without authentication."
+        },
+        format: {
+          type: "string",
+          enum: ["png", "jpeg", "webp"],
+          description: "Image format. Default: png. Same options as pdf_to_images: PNG for quality, JPEG for smaller size, WebP for best compression."
+        }
+      },
+      required: ["fileUrl"]
+    }
+  }
 ];
 var getToolByName = /* @__PURE__ */ __name((name) => {
   return tools.find((tool) => tool.name === name);
@@ -20538,6 +20638,155 @@ async function convertOfficeToPdf(params, env, fileExtension) {
   );
 }
 __name(convertOfficeToPdf, "convertOfficeToPdf");
+async function mergePdfs(params, env) {
+  const apiKey = env.PDFCO_API_KEY;
+  if (!apiKey) {
+    throw new Error("PDFCO_API_KEY environment variable is not set");
+  }
+  if (!Array.isArray(params.urls) || params.urls.length < 2) {
+    throw new Error("Must provide at least 2 PDF URLs to merge");
+  }
+  for (const url of params.urls) {
+    try {
+      new URL(url);
+    } catch {
+      throw new Error(`Invalid URL in urls array: ${url}`);
+    }
+  }
+  if (params.bookmarkTitles) {
+    if (!Array.isArray(params.bookmarkTitles)) {
+      throw new Error("bookmarkTitles must be an array");
+    }
+    if (params.bookmarkTitles.length !== params.urls.length) {
+      throw new Error(
+        `bookmarkTitles length (${params.bookmarkTitles.length}) must match urls length (${params.urls.length})`
+      );
+    }
+  }
+  const requestBody = {
+    url: params.urls.join(","),
+    // Comma-separated URLs
+    async: params.async || false
+  };
+  if (params.name)
+    requestBody.name = params.name;
+  if (params.expiration)
+    requestBody.expiration = params.expiration;
+  if (params.bookmarkTitles) {
+    requestBody.profiles = JSON.stringify({
+      GenerateBookmarks: true,
+      BookmarkTitles: params.bookmarkTitles
+    });
+  }
+  return pdfcoRequest(
+    "/pdf/merge",
+    requestBody,
+    apiKey
+  );
+}
+__name(mergePdfs, "mergePdfs");
+async function splitPdf(params, env) {
+  const apiKey = env.PDFCO_API_KEY;
+  if (!apiKey) {
+    throw new Error("PDFCO_API_KEY environment variable is not set");
+  }
+  try {
+    new URL(params.url);
+  } catch {
+    throw new Error("Invalid file URL provided. Must be a valid HTTP/HTTPS URL.");
+  }
+  const requestBody = {
+    url: params.url,
+    async: params.async || false
+  };
+  if (params.pages)
+    requestBody.pages = params.pages;
+  if (params.name)
+    requestBody.name = params.name;
+  if (params.expiration)
+    requestBody.expiration = params.expiration;
+  return pdfcoRequest(
+    "/pdf/split",
+    requestBody,
+    apiKey
+  );
+}
+__name(splitPdf, "splitPdf");
+async function extractPdfTables(params, env) {
+  const apiKey = env.PDFCO_API_KEY;
+  if (!apiKey) {
+    throw new Error("PDFCO_API_KEY environment variable is not set");
+  }
+  try {
+    new URL(params.url);
+  } catch {
+    throw new Error("Invalid file URL provided. Must be a valid HTTP/HTTPS URL.");
+  }
+  const requestBody = {
+    url: params.url,
+    async: params.async || false,
+    inline: params.inline !== void 0 ? params.inline : false
+  };
+  if (params.pages)
+    requestBody.pages = params.pages;
+  if (params.name)
+    requestBody.name = params.name;
+  if (params.expiration)
+    requestBody.expiration = params.expiration;
+  if (params.columnDetectionMode) {
+    requestBody.profiles = JSON.stringify({
+      ColumnDetectionMode: params.columnDetectionMode
+    });
+  }
+  return pdfcoRequest(
+    "/pdf/convert/to/csv",
+    requestBody,
+    apiKey
+  );
+}
+__name(extractPdfTables, "extractPdfTables");
+async function pdfToImages(params, env) {
+  const apiKey = env.PDFCO_API_KEY;
+  if (!apiKey) {
+    throw new Error("PDFCO_API_KEY environment variable is not set");
+  }
+  try {
+    new URL(params.url);
+  } catch {
+    throw new Error("Invalid file URL provided. Must be a valid HTTP/HTTPS URL.");
+  }
+  const validFormats = ["jpg", "png", "webp"];
+  if (!validFormats.includes(params.format)) {
+    throw new Error(`Invalid format: ${params.format}. Must be one of: ${validFormats.join(", ")}`);
+  }
+  const endpoint = `/pdf/convert/to/${params.format}`;
+  const requestBody = {
+    url: params.url,
+    async: params.async || false,
+    pages: params.pages || "0-"
+    // Default: all pages (0-based indexing)
+  };
+  if (params.name)
+    requestBody.name = params.name;
+  if (params.expiration)
+    requestBody.expiration = params.expiration;
+  const profiles = {};
+  if (params.renderingResolution) {
+    profiles.RenderingResolution = params.renderingResolution;
+  }
+  if (params.format === "jpg" && params.jpegQuality !== void 0) {
+    profiles.JPEGQuality = params.jpegQuality;
+  }
+  if (Object.keys(profiles).length > 0) {
+    requestBody.profiles = JSON.stringify(profiles);
+  }
+  return pdfcoRequest(
+    endpoint,
+    requestBody,
+    apiKey
+  );
+}
+__name(pdfToImages, "pdfToImages");
 
 // src/handlers/pdfco-excel.ts
 async function excelToJson(args, env) {
@@ -20738,6 +20987,468 @@ async function officeToPdf(args, env) {
 }
 __name(officeToPdf, "officeToPdf");
 
+// src/handlers/pdfco-operations.ts
+init_checked_fetch();
+init_modules_watch_stub();
+async function handleMergePdfs(args, env) {
+  const { fileUrls, bookmarkTitles } = args;
+  if (!Array.isArray(fileUrls) || fileUrls.length < 2) {
+    throw new Error("Must provide at least 2 PDF URLs to merge");
+  }
+  for (const url of fileUrls) {
+    try {
+      new URL(url);
+    } catch {
+      throw new Error(`Invalid URL in fileUrls array: ${url}`);
+    }
+  }
+  if (bookmarkTitles) {
+    if (!Array.isArray(bookmarkTitles)) {
+      throw new Error("bookmarkTitles must be an array");
+    }
+    if (bookmarkTitles.length !== fileUrls.length) {
+      throw new Error(
+        `bookmarkTitles length (${bookmarkTitles.length}) must match fileUrls length (${fileUrls.length})`
+      );
+    }
+  }
+  let pdfcoResponse;
+  try {
+    pdfcoResponse = await mergePdfs(
+      {
+        urls: fileUrls,
+        bookmarkTitles,
+        async: false
+        // Sync mode for simplicity
+      },
+      env
+    );
+  } catch (error) {
+    throw new Error(`PDF merge failed: ${error.message}`);
+  }
+  if (!pdfcoResponse.url) {
+    throw new Error(
+      "PDF.co merge succeeded but did not return a download URL. Please retry."
+    );
+  }
+  let pdfResponse;
+  try {
+    pdfResponse = await fetch(pdfcoResponse.url);
+    if (!pdfResponse.ok) {
+      throw new Error(
+        `Failed to download merged PDF: HTTP ${pdfResponse.status}`
+      );
+    }
+  } catch (error) {
+    throw new Error(
+      `Failed to download PDF from PDF.co: ${error.message}. The file may have expired.`
+    );
+  }
+  const pdfBuffer = await pdfResponse.arrayBuffer();
+  const bucketName = env.R2_BUCKET?.name || "";
+  const isDev = bucketName.includes("dev");
+  const { publicUrl } = await uploadPdfToR2(
+    env.R2_BUCKET,
+    pdfBuffer,
+    "merge-pdfs",
+    isDev
+  );
+  const warnings = [];
+  if (bookmarkTitles) {
+    warnings.push(
+      `Bookmarks added: ${bookmarkTitles.length}. Open the PDF with a reader that supports bookmarks to navigate.`
+    );
+  }
+  return {
+    pdfUrl: publicUrl,
+    pageCount: pdfcoResponse.pageCount,
+    ...warnings.length > 0 && { warnings },
+    remainingCredits: pdfcoResponse.remainingCredits
+  };
+}
+__name(handleMergePdfs, "handleMergePdfs");
+async function handleSplitPdf(args, env) {
+  const { fileUrl, pages } = args;
+  try {
+    new URL(fileUrl);
+  } catch {
+    throw new Error("Invalid file URL provided. Must be a valid HTTP/HTTPS URL.");
+  }
+  let pdfcoResponse;
+  try {
+    pdfcoResponse = await splitPdf(
+      {
+        url: fileUrl,
+        pages: pages || "*",
+        // Default: split into individual pages
+        async: false
+      },
+      env
+    );
+  } catch (error) {
+    throw new Error(`PDF split failed: ${error.message}`);
+  }
+  if (!pdfcoResponse.urls || pdfcoResponse.urls.length === 0) {
+    throw new Error(
+      "PDF.co split succeeded but did not return download URLs. Please retry."
+    );
+  }
+  const bucketName = env.R2_BUCKET?.name || "";
+  const isDev = bucketName.includes("dev");
+  const publicUrls = [];
+  for (let i2 = 0; i2 < pdfcoResponse.urls.length; i2++) {
+    const pdfUrl = pdfcoResponse.urls[i2];
+    let pdfResponse;
+    try {
+      pdfResponse = await fetch(pdfUrl);
+      if (!pdfResponse.ok) {
+        throw new Error(
+          `Failed to download split PDF ${i2 + 1}: HTTP ${pdfResponse.status}`
+        );
+      }
+    } catch (error) {
+      throw new Error(
+        `Failed to download split PDF ${i2 + 1} from PDF.co: ${error.message}`
+      );
+    }
+    const pdfBuffer = await pdfResponse.arrayBuffer();
+    const { publicUrl } = await uploadPdfToR2(
+      env.R2_BUCKET,
+      pdfBuffer,
+      `split-pdf/part-${i2 + 1}`,
+      isDev
+    );
+    publicUrls.push(publicUrl);
+  }
+  const warnings = [];
+  if (pages === "*") {
+    warnings.push(
+      `PDF split into ${publicUrls.length} individual pages. Page indexing is 1-based (first page = 1).`
+    );
+  } else if (pages) {
+    warnings.push(
+      `PDF split using page ranges: "${pages}". Page indexing is 1-based (first page = 1).`
+    );
+  }
+  return {
+    pdfUrls: publicUrls,
+    pageCount: pdfcoResponse.pageCount,
+    splitCount: publicUrls.length,
+    ...warnings.length > 0 && { warnings },
+    remainingCredits: pdfcoResponse.remainingCredits
+  };
+}
+__name(handleSplitPdf, "handleSplitPdf");
+function stripBOM(str) {
+  if (str.charCodeAt(0) === 65279) {
+    return str.slice(1);
+  }
+  return str;
+}
+__name(stripBOM, "stripBOM");
+function parseCSVToJSON(csv) {
+  const lines = csv.trim().split("\n");
+  if (lines.length === 0)
+    return [];
+  const headers = lines[0].split(",").map((h3) => h3.trim().replace(/"/g, ""));
+  const rows = [];
+  for (let i2 = 1; i2 < lines.length; i2++) {
+    const values = lines[i2].split(",").map((v3) => v3.trim().replace(/"/g, ""));
+    const row = {};
+    headers.forEach((header, index) => {
+      row[header] = values[index] || "";
+    });
+    rows.push(row);
+  }
+  return rows;
+}
+__name(parseCSVToJSON, "parseCSVToJSON");
+async function handleExtractPdfTables(args, env) {
+  const { fileUrl, pages, outputFormat, columnDetectionMode } = args;
+  try {
+    new URL(fileUrl);
+  } catch {
+    throw new Error("Invalid file URL provided. Must be a valid HTTP/HTTPS URL.");
+  }
+  let pdfcoResponse;
+  try {
+    pdfcoResponse = await extractPdfTables(
+      {
+        url: fileUrl,
+        pages: pages || "0-",
+        // Default: all pages (0-based)
+        inline: true,
+        // Get CSV content inline
+        columnDetectionMode: columnDetectionMode || "ContentGroupsAndBorders",
+        // Default mode
+        async: false
+      },
+      env
+    );
+  } catch (error) {
+    throw new Error(`PDF table extraction failed: ${error.message}`);
+  }
+  if (!pdfcoResponse.body && !pdfcoResponse.url) {
+    throw new Error(
+      "PDF.co extraction succeeded but did not return data. Please retry."
+    );
+  }
+  let csvContent;
+  if (pdfcoResponse.body) {
+    csvContent = pdfcoResponse.body;
+  } else if (pdfcoResponse.url) {
+    let csvResponse;
+    try {
+      csvResponse = await fetch(pdfcoResponse.url);
+      if (!csvResponse.ok) {
+        throw new Error(
+          `Failed to download CSV: HTTP ${csvResponse.status}`
+        );
+      }
+    } catch (error) {
+      throw new Error(
+        `Failed to download CSV from PDF.co: ${error.message}`
+      );
+    }
+    csvContent = await csvResponse.text();
+  } else {
+    throw new Error("No CSV data returned from PDF.co");
+  }
+  csvContent = stripBOM(csvContent);
+  const isEmpty = !csvContent || csvContent.trim().length === 0;
+  const warnings = [];
+  if (isEmpty) {
+    warnings.push(
+      "No tables found in the PDF. The document may not contain structured tables, or they may be images."
+    );
+  }
+  const format = outputFormat || "csv";
+  let data;
+  let rowCount;
+  if (format === "json") {
+    if (isEmpty) {
+      data = [];
+      rowCount = 0;
+    } else {
+      data = parseCSVToJSON(csvContent);
+      rowCount = data.length;
+    }
+  } else {
+    data = csvContent;
+    if (!isEmpty) {
+      const lines = csvContent.trim().split("\n");
+      rowCount = Math.max(0, lines.length - 1);
+    } else {
+      rowCount = 0;
+    }
+  }
+  if (pages) {
+    warnings.push(
+      `Extracted from pages: "${pages}". Page indexing is 0-based (first page = 0).`
+    );
+  } else {
+    warnings.push("Extracted from all pages. Page indexing is 0-based (first page = 0).");
+  }
+  return {
+    data,
+    format,
+    pageCount: pdfcoResponse.pageCount,
+    rowCount,
+    ...warnings.length > 0 && { warnings },
+    remainingCredits: pdfcoResponse.remainingCredits
+  };
+}
+__name(handleExtractPdfTables, "handleExtractPdfTables");
+
+// src/handlers/browser-images.ts
+init_checked_fetch();
+init_modules_watch_stub();
+async function handlePdfToImages(args, env) {
+  const { fileUrl, format = "png" } = args;
+  try {
+    new URL(fileUrl);
+  } catch {
+    throw new Error("Invalid file URL provided. Must be a valid HTTP/HTTPS URL.");
+  }
+  const validFormats = ["png", "jpeg", "webp"];
+  if (!validFormats.includes(format)) {
+    throw new Error(
+      `Invalid image format: ${format}. Must be one of: ${validFormats.join(", ")}`
+    );
+  }
+  const pdfcoFormat = format === "jpeg" ? "jpg" : format;
+  let pdfcoResponse;
+  try {
+    pdfcoResponse = await pdfToImages(
+      {
+        url: fileUrl,
+        format: pdfcoFormat,
+        pages: "0-",
+        // All pages (0-based indexing)
+        renderingResolution: 150,
+        // Higher DPI for better quality
+        ...pdfcoFormat === "jpg" && { jpegQuality: 90 },
+        // High JPEG quality
+        async: false
+      },
+      env
+    );
+  } catch (error) {
+    throw new Error(`PDF to images conversion failed: ${error.message}`);
+  }
+  if (!pdfcoResponse.urls || pdfcoResponse.urls.length === 0) {
+    throw new Error(
+      "PDF.co conversion succeeded but did not return image URLs. Please retry."
+    );
+  }
+  const bucketName = env.R2_BUCKET?.name || "";
+  const isDev = bucketName.includes("dev");
+  const imageUrls = [];
+  for (let i2 = 0; i2 < pdfcoResponse.urls.length; i2++) {
+    const imageUrl = pdfcoResponse.urls[i2];
+    let imageResponse;
+    try {
+      imageResponse = await fetch(imageUrl);
+      if (!imageResponse.ok) {
+        throw new Error(
+          `Failed to download image ${i2 + 1}: HTTP ${imageResponse.status}`
+        );
+      }
+    } catch (error) {
+      throw new Error(
+        `Failed to download image ${i2 + 1} from PDF.co: ${error.message}`
+      );
+    }
+    const imageBuffer = await imageResponse.arrayBuffer();
+    const uploadFormat = pdfcoFormat === "jpg" ? "jpg" : format;
+    const { publicUrl } = await uploadImageToR2(
+      env.R2_BUCKET,
+      imageBuffer,
+      uploadFormat,
+      `pdf-to-images/page-${i2 + 1}`,
+      isDev
+    );
+    imageUrls.push(publicUrl);
+  }
+  const warnings = [];
+  warnings.push(
+    `Converted ${imageUrls.length} PDF page(s) to ${format.toUpperCase()} images. Images are stored permanently in R2.`
+  );
+  if (format === "jpeg") {
+    warnings.push(
+      "JPEG format selected: smaller file sizes but lossy compression. Use PNG for lossless quality."
+    );
+  } else if (format === "webp") {
+    warnings.push(
+      "WebP format selected: best compression efficiency with good quality."
+    );
+  }
+  return {
+    imageUrls,
+    pageCount: pdfcoResponse.pageCount,
+    imageCount: imageUrls.length,
+    format,
+    ...warnings.length > 0 && { warnings },
+    remainingCredits: pdfcoResponse.remainingCredits
+  };
+}
+__name(handlePdfToImages, "handlePdfToImages");
+var SUPPORTED_DOCUMENT_EXTENSIONS = [
+  ".doc",
+  ".docx",
+  ".xls",
+  ".xlsx",
+  ".ppt",
+  ".pptx",
+  ".csv",
+  ".rtf",
+  ".txt",
+  ".xps"
+];
+function getFileExtension2(url) {
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    const ext = pathname.substring(pathname.lastIndexOf(".")).toLowerCase();
+    return ext;
+  } catch {
+    throw new Error("Invalid file URL provided. Cannot extract file extension.");
+  }
+}
+__name(getFileExtension2, "getFileExtension");
+async function handleDocumentToImages(args, env) {
+  const { fileUrl, format = "png" } = args;
+  try {
+    new URL(fileUrl);
+  } catch {
+    throw new Error("Invalid file URL provided. Must be a valid HTTP/HTTPS URL.");
+  }
+  const fileExtension = getFileExtension2(fileUrl);
+  if (!SUPPORTED_DOCUMENT_EXTENSIONS.includes(fileExtension)) {
+    throw new Error(
+      `Unsupported file type: ${fileExtension}. Supported formats: ${SUPPORTED_DOCUMENT_EXTENSIONS.join(", ")}`
+    );
+  }
+  const validFormats = ["png", "jpeg", "webp"];
+  if (!validFormats.includes(format)) {
+    throw new Error(
+      `Invalid image format: ${format}. Must be one of: ${validFormats.join(", ")}`
+    );
+  }
+  const warnings = [];
+  warnings.push(
+    `Step 1/2: Converting ${fileExtension} document to PDF...`
+  );
+  let pdfResult;
+  try {
+    pdfResult = await officeToPdf(
+      {
+        fileUrl,
+        // Use autosize for Excel files to fit content
+        ...fileExtension.includes(".xls") && { autosize: true }
+      },
+      env
+    );
+  } catch (error) {
+    throw new Error(`Document to PDF conversion failed: ${error.message}`);
+  }
+  if (pdfResult.warnings) {
+    warnings.push(...pdfResult.warnings);
+  }
+  warnings.push(
+    `Step 2/2: Converting PDF to ${format.toUpperCase()} images...`
+  );
+  let imagesResult;
+  try {
+    imagesResult = await handlePdfToImages(
+      {
+        fileUrl: pdfResult.pdfUrl,
+        format
+      },
+      env
+    );
+  } catch (error) {
+    throw new Error(`PDF to images conversion failed: ${error.message}`);
+  }
+  if (imagesResult.warnings) {
+    warnings.push(...imagesResult.warnings);
+  }
+  warnings.push(
+    `Successfully converted ${fileExtension} document to ${imagesResult.imageCount} ${format.toUpperCase()} image(s).`
+  );
+  return {
+    imageUrls: imagesResult.imageUrls,
+    pageCount: imagesResult.pageCount,
+    imageCount: imagesResult.imageCount,
+    format,
+    sourceFileType: fileExtension,
+    warnings,
+    remainingCredits: imagesResult.remainingCredits
+    // From final step
+  };
+}
+__name(handleDocumentToImages, "handleDocumentToImages");
+
 // src/mcp/server.ts
 async function handleMCPRequest(request, env) {
   const { id, method, params } = request;
@@ -20807,6 +21518,21 @@ async function handleMCPRequest(request, env) {
             case "office_to_pdf":
               result = await officeToPdf(args, env);
               break;
+            case "merge_pdfs":
+              result = await handleMergePdfs(args, env);
+              break;
+            case "split_pdf":
+              result = await handleSplitPdf(args, env);
+              break;
+            case "extract_pdf_tables":
+              result = await handleExtractPdfTables(args, env);
+              break;
+            case "pdf_to_images":
+              result = await handlePdfToImages(args, env);
+              break;
+            case "document_to_images":
+              result = await handleDocumentToImages(args, env);
+              break;
             default:
               return createInternalError(
                 id,
@@ -20847,8 +21573,8 @@ app.get("/health", (c2) => {
   return c2.json({
     status: "ok",
     version: "1.0.0",
-    tools: 8,
-    // Phase 6: 8 tools implemented (3 PDF + 2 screenshots + 1 markdown + 1 excel + 1 office)
+    tools: 13,
+    // Phase 8: 13/13 tools complete! (3 PDF + 2 screenshots + 2 images + 1 markdown + 1 excel + 1 office + 3 PDF ops)
     totalPlanned: 13
   });
 });
@@ -21119,7 +21845,7 @@ var drainBody = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "drainBody");
 var middleware_ensure_req_body_drained_default = drainBody;
 
-// .wrangler/tmp/bundle-iuZbtB/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-c8eiWa/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default
 ];
@@ -21152,7 +21878,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-iuZbtB/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-c8eiWa/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;
