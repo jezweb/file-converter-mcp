@@ -187,6 +187,17 @@ url_to_screenshot({
   viewport: { width: 1920, height: 1080 }
 })
 // Returns: { imageUrl: "https://r2.../screenshot.png" }
+
+// Advanced options:
+url_to_screenshot({
+  url: "https://example.com",
+  format: "jpeg",
+  quality: 60,              // Compression quality (1-100)
+  clipSelector: "header",   // Capture specific element
+  scrollDelay: 200,         // Wait for lazy-loading (ms)
+  fullPage: false
+})
+// Returns: { imageUrl: "https://r2.../header.jpeg" }
 ```
 
 **6. `pdf_to_images`** - Convert PDF pages to images
