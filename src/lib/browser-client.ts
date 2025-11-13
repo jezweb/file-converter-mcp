@@ -69,8 +69,8 @@ export async function generatePdfFromUrl(
 
   try {
     await page.goto(url, {
-      waitUntil: 'networkidle2',
-      timeout: 30000,
+      waitUntil: 'load', // Wait for DOM + resources (images, CSS, fonts)
+      timeout: 15000,     // Fail faster for slow/broken sites
     });
 
     const pdfBuffer = await page.pdf({
@@ -92,29 +92,103 @@ export async function generatePdfFromUrl(
 }
 
 /**
+ * Screenshot options interface
+ */
+export interface ScreenshotOptions {
+  format?: 'png' | 'jpeg' | 'webp';
+  fullPage?: boolean;
+  viewport?: {
+    width?: number;
+    height?: number;
+  };
+  scrollDelay?: number;
+  quality?: number;
+  clipSelector?: string;
+}
+
+/**
  * Generate screenshot from HTML content
  * @param browser - Active browser instance
  * @param html - HTML content to capture
- * @param format - Image format (png, jpeg, webp)
- * @param fullPage - Capture full page height
+ * @param options - Screenshot options
  * @returns Image buffer
  */
 export async function generateScreenshotFromHtml(
   browser: Browser,
   html: string,
-  format: 'png' | 'jpeg' | 'webp' = 'png',
-  fullPage: boolean = true
+  options: ScreenshotOptions = {}
 ): Promise<Buffer> {
+  const {
+    format = 'png',
+    fullPage = true,
+    viewport,
+    scrollDelay = 0,
+    quality = 80,
+    clipSelector,
+  } = options;
+
   const page = await browser.newPage();
 
   try {
+    // Set custom viewport if provided
+    if (viewport) {
+      await page.setViewport({
+        width: viewport.width || 1280,
+        height: viewport.height || 720,
+        deviceScaleFactor: 2, // High DPI for sharp images
+      });
+    }
+
     await page.setContent(html, { waitUntil: 'networkidle2' });
 
-    const screenshotBuffer = await page.screenshot({
-      type: format,
-      fullPage,
-      omitBackground: format === 'png', // Transparent background for PNG
-    });
+    // Handle clipSelector (capture specific element only)
+    let screenshotBuffer: Buffer | Uint8Array;
+
+    if (clipSelector) {
+      const element = await page.$(clipSelector);
+      if (!element) {
+        throw new Error(`Element not found for selector: ${clipSelector}`);
+      }
+      screenshotBuffer = await element.screenshot({
+        type: format,
+        omitBackground: format === 'png',
+        ...(format !== 'png' && { quality }),
+      });
+    } else {
+      // Full page or viewport screenshot
+      screenshotBuffer = await page.screenshot({
+        type: format,
+        fullPage,
+        omitBackground: format === 'png',
+        ...(format !== 'png' && { quality }),
+        ...(scrollDelay > 0 && fullPage && {
+          captureBeyondViewport: true,
+          // Note: Puppeteer doesn't have native scrollDelay, but captureBeyondViewport helps
+        }),
+      });
+    }
+
+    // Simulate scroll delay for lazy-loading if requested
+    if (scrollDelay > 0 && fullPage && !clipSelector) {
+      const bodyHeight = await page.evaluate(() => document.body.scrollHeight);
+      const viewportHeight = viewport?.height || 720;
+      const scrollSteps = Math.ceil(bodyHeight / viewportHeight);
+
+      for (let i = 0; i < scrollSteps; i++) {
+        await page.evaluate((step: number, vpHeight: number) => {
+          window.scrollTo(0, step * vpHeight);
+        }, i, viewportHeight);
+        await new Promise(resolve => setTimeout(resolve, scrollDelay));
+      }
+
+      // Take final screenshot after scrolling
+      screenshotBuffer = await page.screenshot({
+        type: format,
+        fullPage,
+        omitBackground: format === 'png',
+        ...(format !== 'png' && { quality }),
+      });
+    }
 
     return screenshotBuffer as Buffer;
   } finally {
@@ -126,29 +200,76 @@ export async function generateScreenshotFromHtml(
  * Generate screenshot from URL
  * @param browser - Active browser instance
  * @param url - URL to capture
- * @param format - Image format (png, jpeg, webp)
- * @param fullPage - Capture full page height
+ * @param options - Screenshot options
  * @returns Image buffer
  */
 export async function generateScreenshotFromUrl(
   browser: Browser,
   url: string,
-  format: 'png' | 'jpeg' | 'webp' = 'png',
-  fullPage: boolean = true
+  options: ScreenshotOptions = {}
 ): Promise<Buffer> {
+  const {
+    format = 'png',
+    fullPage = true,
+    viewport,
+    scrollDelay = 0,
+    quality = 80,
+    clipSelector,
+  } = options;
+
   const page = await browser.newPage();
 
   try {
+    // Set custom viewport if provided
+    if (viewport) {
+      await page.setViewport({
+        width: viewport.width || 1280,
+        height: viewport.height || 720,
+        deviceScaleFactor: 2, // High DPI for sharp images
+      });
+    }
+
     await page.goto(url, {
-      waitUntil: 'networkidle2',
-      timeout: 30000,
+      waitUntil: 'load', // Wait for DOM + resources (images, CSS, fonts)
+      timeout: 15000,     // Fail faster for slow/broken sites
     });
 
-    const screenshotBuffer = await page.screenshot({
-      type: format,
-      fullPage,
-      omitBackground: format === 'png',
-    });
+    // Simulate scroll delay for lazy-loading if requested
+    if (scrollDelay > 0 && fullPage && !clipSelector) {
+      const bodyHeight = await page.evaluate(() => document.body.scrollHeight);
+      const viewportHeight = viewport?.height || 720;
+      const scrollSteps = Math.ceil(bodyHeight / viewportHeight);
+
+      for (let i = 0; i < scrollSteps; i++) {
+        await page.evaluate((step: number, vpHeight: number) => {
+          window.scrollTo(0, step * vpHeight);
+        }, i, viewportHeight);
+        await new Promise(resolve => setTimeout(resolve, scrollDelay));
+      }
+    }
+
+    // Handle clipSelector (capture specific element only)
+    let screenshotBuffer: Buffer | Uint8Array;
+
+    if (clipSelector) {
+      const element = await page.$(clipSelector);
+      if (!element) {
+        throw new Error(`Element not found for selector: ${clipSelector}`);
+      }
+      screenshotBuffer = await element.screenshot({
+        type: format,
+        omitBackground: format === 'png',
+        ...(format !== 'png' && { quality }),
+      });
+    } else {
+      // Full page or viewport screenshot
+      screenshotBuffer = await page.screenshot({
+        type: format,
+        fullPage,
+        omitBackground: format === 'png',
+        ...(format !== 'png' && { quality }),
+      });
+    }
 
     return screenshotBuffer as Buffer;
   } finally {

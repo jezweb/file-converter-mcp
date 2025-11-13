@@ -11,6 +11,9 @@ export interface HtmlToScreenshotArgs {
     width?: number;
     height?: number;
   };
+  scrollDelay?: number;
+  quality?: number;
+  clipSelector?: string;
 }
 
 export interface UrlToScreenshotArgs {
@@ -21,6 +24,9 @@ export interface UrlToScreenshotArgs {
     width?: number;
     height?: number;
   };
+  scrollDelay?: number;
+  quality?: number;
+  clipSelector?: string;
 }
 
 /**
@@ -30,7 +36,7 @@ export interface UrlToScreenshotArgs {
  * @returns Public URL to generated screenshot
  */
 export async function htmlToScreenshot(args: HtmlToScreenshotArgs, env: Bindings): Promise<{ imageUrl: string }> {
-  const { html, format = 'png', fullPage = true, viewport } = args;
+  const { html, format = 'png', fullPage = true, viewport, scrollDelay, quality, clipSelector } = args;
 
   // Validate HTML is not empty
   if (!html || html.trim().length === 0) {
@@ -40,19 +46,15 @@ export async function htmlToScreenshot(args: HtmlToScreenshotArgs, env: Bindings
   const browser = await launchBrowser(env.BROWSER);
 
   try {
-    // Set custom viewport if provided
-    if (viewport) {
-      const page = await browser.newPage();
-      await page.setViewport({
-        width: viewport.width || 1280,
-        height: viewport.height || 720,
-        deviceScaleFactor: 2, // High DPI for sharp images
-      });
-      await page.close();
-    }
-
     // Generate screenshot with specified options
-    const imageBuffer = await generateScreenshotFromHtml(browser, html, format, fullPage);
+    const imageBuffer = await generateScreenshotFromHtml(browser, html, {
+      format,
+      fullPage,
+      viewport,
+      scrollDelay,
+      quality,
+      clipSelector,
+    });
 
     // Upload to R2 (detect dev mode)
     const isDev = true; // For now, set to true in dev mode
@@ -76,7 +78,7 @@ export async function htmlToScreenshot(args: HtmlToScreenshotArgs, env: Bindings
  * @returns Public URL to generated screenshot
  */
 export async function urlToScreenshot(args: UrlToScreenshotArgs, env: Bindings): Promise<{ imageUrl: string }> {
-  const { url, format = 'png', fullPage = true, viewport } = args;
+  const { url, format = 'png', fullPage = true, viewport, scrollDelay, quality, clipSelector } = args;
 
   // Validate URL format
   try {
@@ -88,19 +90,15 @@ export async function urlToScreenshot(args: UrlToScreenshotArgs, env: Bindings):
   const browser = await launchBrowser(env.BROWSER);
 
   try {
-    // Set custom viewport if provided
-    if (viewport) {
-      const page = await browser.newPage();
-      await page.setViewport({
-        width: viewport.width || 1280,
-        height: viewport.height || 720,
-        deviceScaleFactor: 2, // High DPI for sharp images
-      });
-      await page.close();
-    }
-
-    // Generate screenshot from URL
-    const imageBuffer = await generateScreenshotFromUrl(browser, url, format, fullPage);
+    // Generate screenshot from URL with all options
+    const imageBuffer = await generateScreenshotFromUrl(browser, url, {
+      format,
+      fullPage,
+      viewport,
+      scrollDelay,
+      quality,
+      clipSelector,
+    });
 
     // Upload to R2
     const isDev = true; // For now, set to true in dev mode

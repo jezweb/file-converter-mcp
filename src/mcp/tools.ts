@@ -135,6 +135,20 @@ export const tools: MCPTool[] = [
           },
           description: 'Custom viewport size for screenshot. Uses 2x device scale for sharp images.',
         },
+        scrollDelay: {
+          type: 'number',
+          description: 'Milliseconds to wait between scroll steps when capturing full page. Useful for lazy-loading images. Default: 0 (no delay). Recommended: 100-500ms for sites with lazy loading.',
+        },
+        quality: {
+          type: 'number',
+          description: 'Compression quality for JPEG/WebP (1-100). Higher = better quality but larger file size. Default: 80. This parameter is ignored for PNG format.',
+          minimum: 1,
+          maximum: 100,
+        },
+        clipSelector: {
+          type: 'string',
+          description: 'CSS selector to capture only a specific element (e.g., "#main-content", ".article-body"). If not provided, captures the entire page according to fullPage setting.',
+        },
       },
       required: ['html'],
     },
@@ -165,6 +179,20 @@ export const tools: MCPTool[] = [
             height: { type: 'number', description: 'Viewport height in pixels. Default: 720' },
           },
           description: 'Custom viewport size for screenshot.',
+        },
+        scrollDelay: {
+          type: 'number',
+          description: 'Milliseconds to wait between scroll steps when capturing full page. Useful for lazy-loading images. Default: 0 (no delay). Recommended: 100-500ms for sites with lazy loading.',
+        },
+        quality: {
+          type: 'number',
+          description: 'Compression quality for JPEG/WebP (1-100). Higher = better quality but larger file size. Default: 80. This parameter is ignored for PNG format.',
+          minimum: 1,
+          maximum: 100,
+        },
+        clipSelector: {
+          type: 'string',
+          description: 'CSS selector to capture only a specific element (e.g., "#main-content", ".article-body"). If not provided, captures the entire page according to fullPage setting.',
         },
       },
       required: ['url'],
